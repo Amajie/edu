@@ -402,7 +402,7 @@ export default {
                 padding: 20px 0;
             }
             .videos-wrap{
-                height: 400px;
+                height: 440px;
                 .videos-wrap-title{
                     width: 220px;
                     height: 100%;
@@ -416,7 +416,7 @@ export default {
                 .videos-wrap-right{
                     float: left;
                     width: 970px;
-                     height: 100%;
+                    height: 100%;
                     margin-left: 10px;
                     ul{
                         height: 100%;

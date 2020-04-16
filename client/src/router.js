@@ -15,5 +15,10 @@ export default new Router({
             name: 'teaching',
             component: () => import('@/views/Teaching.vue')
         },
+        {
+            path: '/vdetail',
+            name: 'videoDetail',
+            component: () => import('@/views/VideoDetail.vue')
+        },
     ]
 })

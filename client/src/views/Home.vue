@@ -42,6 +42,7 @@ export default {
     .home-main{
         background: #f2f4f6;
         padding-top: 10px;
+        // 这里是为了解决边距重叠
         padding-bottom: 1px;
         > div{
             width: 1200px;
