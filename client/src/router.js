@@ -20,5 +20,15 @@ export default new Router({
             name: 'videoDetail',
             component: () => import('@/views/VideoDetail.vue')
         },
+        {
+            path: '/vplay',
+            name: 'videoPlay',
+            component: () => import('@/views/VideoPlay.vue')
+        },
+        {
+            path: '/person',
+            name: 'Person',
+            component: () => import('@/views/Person.vue')
+        },
     ]
 })

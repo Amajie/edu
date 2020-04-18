@@ -244,7 +244,7 @@ import Navbar from '@/components/home/Navbar.vue'
 import Footerbar from '@/components/home/Footerbar.vue'
 
 export default {
-    name: 'home',
+    name: 'vdetail',
     components:{
         // 头部
         Navbar,
