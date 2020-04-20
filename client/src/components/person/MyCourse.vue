@@ -7,14 +7,21 @@
                 <span>发布课程</span>
             </div>
             <div class="content">
-                asdas
+                <UploadVideo></UploadVideo>
             </div>
         </div>
     </div>
 </template>
 <script>
+
+import UploadVideo  from './course/UploadVidei.vue'
+
 export default {
-    name: 'myCourse'
+    name: 'myCourse',
+    components:{
+        // 视频上传
+        UploadVideo
+    }
 }
 </script>
 
