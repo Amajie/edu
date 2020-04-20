@@ -92,7 +92,7 @@ export default {
     name: 'person',
     data(){
         return {
-            childComponent: MyCourse
+            childComponent: User
         }
     },
     components:{

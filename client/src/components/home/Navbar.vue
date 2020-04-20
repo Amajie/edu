@@ -17,8 +17,7 @@
             <!-- 账号状态 -->
             <div class="conut">
                 <div class="count-login">
-                    <span title="前往登陆">登陆</span>
-                    <span title="快注册吧，精彩不断">注册</span>
+                    <span @click="$router.replace('/login')" title="前往登陆">登陆</span>
                 </div>
                 <!-- <div class="avatar">
                     <img src="./imgs/user_avatar.jpg">
