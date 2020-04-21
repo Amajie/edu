@@ -19,11 +19,11 @@
                         <input v-model="userName" placeholder="请输入用户名">
                     </div>
                     <div class="password">
-                        <input v-model="password" placeholder="请输入密码">
+                        <input type="password" v-model="userCode" placeholder="请输入密码">
                     </div>
                     <div class="btn">
                         <span @click="handleLogin" class="login-entry">我要登陆</span>
-                        <span @click="$router.replace('/')" class="login-no">我是过客</span>
+                        <span @click="noLogin" class="login-no">我是过客</span>
                     </div>
                     <div class="login-detail">
                         <span class="detail">注意：</span>
@@ -36,29 +36,117 @@
 </template>
 
 <script>
-import axios from 'axios'
+import {login, register} from '@/axios/index'
+import {mapState, mapMutations} from 'vuex' 
 export default {
     name: 'login',
     data(){
         return {
-            userName: '',
-            password: ''
+            userName: '1111',
+            userCode: '111111',
+            modal: false,
+            modelMsg: ''
         }
     },
+    computed:{
+        ...mapState([
+            'users'
+        ])
+    },
     methods:{
+        ...mapMutations([
+            'setUsers'
+        ]),
+        // 处理登陆
         handleLogin(){
-            const {userName, password} = this
+            const {userName, userCode, $Message, $Modal, onOk} = this
+            
+            // 用户名 密码为空
+            if(!userName) return $Message.warning('用户名不能为空')
+            if(!userCode) return $Message.warning('密码不能为空')
+            if(userName.length < 4 ||  userName.length > 8) return $Message.warning('用户名长度需在4~8之间')
+            if(userCode.length < 6 ||  userCode.length > 12) return $Message.warning('密码长度需在6~12之间')
 
-            if(!userName || !password){
-                return alert('内容不能为空')
-            }
+            login({userName, userCode}).then(res =>{
+                // 获取数据
+                const {code, users} =res.data
 
-            axios({
-                url: '/api/login',
-                method: 'post',
-                data: {
-                    userName,
-                    password
+                if(code === 500){
+                    return $Modal.error({
+                        title: '提示',
+                        content: '服务器错误，请稍后再试'
+                    })
+                }else if(code === 0){
+                    return $Modal.confirm({
+                        title: '提示',
+                        content: '该用户名，没有被注册，是否现在注册？',
+                        onOk,
+                        onCancel: () =>{
+                            this.userName = ''
+                            this.userCode = ''
+                        }
+                    })
+                }else if(code === 1){
+                   return $Modal.warning({
+                        title: '提示',
+                        content: '密码错误，请重新输入'
+                   })
+                }
+
+
+                this.toHome('登陆成功，即将前往首页...', users)
+
+            })
+        },
+
+        // 此时发送请求 注册该用户
+        onOk(){
+            const {userName, userCode, $Modal} = this
+            
+            register({
+                userName, userCode
+            }).then(res =>{
+                 // 获取数据
+                const {code, users} =res.data
+                // 为什么使用定时器 因为 这里已经嵌套了两层 modal 会出现一闪一闪的结果
+                if(code === 500){
+                    clearTimeout(this.time)
+                    return this.time = setTimeout(() =>{
+                        $Modal.warning({
+                            title: '提示',
+                            content: '服务器错误，请稍后再试'
+                        })
+                    }, 500)
+                }
+
+                // 成功
+                this.toHome('注册成功，即将前往首页...', users)
+            })
+        },
+
+        // 登陆 或者注册成功 前往首页
+        toHome(content, users){
+
+            this.$Message.success({
+                content,
+                duration: 2,
+                onClose: () =>{
+                    // 设置 用户信息 保存到 vuex中
+                    this.setUsers(users)
+                    this.$router.replace('/person')
+                }
+            })
+        },
+
+        // 不注册 直接前往首页
+        noLogin(){
+            this.$Modal.confirm({
+                title: '我好伤心',
+                content: '真的不登陆在走？好伤心，再考虑考虑呗！',
+                cancelText: '留下',
+                okText: '离开',
+                onOk: () =>{
+                    this.$router.replace('/')
                 }
             })
         }
@@ -102,8 +190,8 @@ export default {
                 top: 50%;
                 left: 50%;
                 width: 300px;
-                height: 204px;
-                margin: -102px -150px;
+                height: 220px;
+                margin: -110px -150px;
                 padding: 20px 20px 0;
                 border-radius: 10px;
                 background-color: #fff;

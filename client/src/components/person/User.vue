@@ -5,63 +5,132 @@
                <ul>
                    <li>
                         <em>用户名</em>
-                        <span>车神-黄杰</span>
+                        <span>{{users.userName}}</span>
                    </li>
                    <li>
                         <em>密码</em>
-                        <span>**********</span>
+                        <span>********</span>
                    </li>
                    <li>
                         <em>性别</em>
-                        <span>男</span>
+                        <span>{{users.userGender === 1 ? '男': '女'}}</span>
                    </li>
                    <li>
                         <em>个性签名</em>
-                        <span>我是车神哈哈哈哈我是车神哈哈哈哈我是车神哈哈哈哈我是车神哈哈哈哈我是车神哈哈哈哈我是车神哈哈哈哈</span>
+                        <span>{{users.userSign ? users.userSign: '暂无个性签名'}}</span>
                    </li>
                    <li>
                         <em>个人邮箱</em>
-                        <span>651762920@qq.com</span>
+                        <span>{{users.userEmail ? users.userEmail: '暂无邮箱'}}</span>
                    </li>
                    <li>
                         <em>居住地址</em>
-                        <span>广东深圳</span>
+                        <span>{{users.userAddress ? users.userAddress: '暂无地址'}}</span>
                    </li>
                </ul>
             </div>
             <div class="change">
                 <ul>
                     <li>
-                            <input placeholder="请输入用户名">
+                        <input v-model="userName" placeholder="请输入用户名">
+                        <span @click="changeUsers('userName')">修改</span>
                     </li>
                     <li>
-                        <input placeholder="请输入密码">
+                        <input v-model="userCode" type="password" placeholder="请输入密码">
+                        <span @click="changeUsers('userCode')">修改</span>
                     </li>
                     <li class="gender">
-                        <span class="active">男</span>
-                        <span>女</span>
+                        <div>
+                            <em @click="userGender = 1" :class="{active: userGender === 1}">男</em>
+                            <em @click="userGender = 2" :class="{active: userGender === 2}">女</em>
+                        </div>
+                        <!-- <em class="change-gender" @click="changeUsers('userGender')">修改</em> -->
+                        <span @click="changeUsers('userGender')">修改</span>
                     </li>
                     <li>
-                            <input placeholder="请输入个性签名">
+                        <input v-model="userSign" placeholder="请输入个性签名">
+                        <span @click="changeUsers('userSign')">修改</span>
                     </li>
                     <li>
-                            <input placeholder="请输入个人邮箱">
+                        <input v-model="userEmail" placeholder="请输入个人邮箱">
+                        <span @click="changeUsers('userEmail')">修改</span>
                     </li>
                     <li>
-                        <input placeholder="请输入居住地址">
+                        <input v-model="userAddress" placeholder="请输入居住地址">
+                        <span @click="changeUsers('userAddress')">修改</span>
                     </li>
                </ul>
             </div>
-        </div>
-        <div class="btn">
-            <span title="修改信息">点击修改</span>
         </div>
     </div>
 </template>
 
 <script>
+
+import {updateUser} from '@/axios/index'
+import { mapState, mapMutations } from 'vuex'
+
 export default {
-    name: 'user'
+    name: 'user',
+    data(){
+        return{
+            userName: '',
+            userGender: 0,
+            userEmail: '',
+            userCode: '',
+            userSign: '',
+            userAddress: ''
+        }
+    },
+    computed:{
+        ...mapState(['users'])
+    },
+    
+    methods:{
+
+        ...mapMutations([
+            'setUsers'
+        ]),
+        // 修改用户信息
+        changeUsers(key){
+
+
+            const {users, setUsers, $Modal, $Message} = this
+
+            const value = this[key]
+
+            if(!value){
+                return $Modal.warning({
+                    title: '提示',
+                    content: '内容不能为空'
+                })
+            }
+
+            // 如果性别 与设置之前 一样无需发送请求 直接提示成功
+            if(key === 'userGender' && value === users.userGender){
+                return $Message.success('修改成功')
+            }
+            
+            // 发送请求
+            updateUser({
+                setVal: value,
+                setKey: key
+            }).then(res =>{
+
+                const {code} = res.data
+                // 修改失败
+                if(code === 500){
+                    return $Message.error('服务错误，请稍后再试')
+                }
+
+                // 更新 vuex 数据 密码不需要更新
+                key === 'userCode' || setUsers({...users, [key]: value})
+
+                $Message.success('修改成功')
+
+            })
+        }
+    }
 }
 </script>
 
@@ -84,7 +153,7 @@ export default {
                             display: block;
                             float: left;
                             height: 100%;
-                            width: 75px;
+                            width: 120px;
                             font-style: normal;
                             font-weight: 700;
                             color: #3c3a3a;
@@ -107,31 +176,46 @@ export default {
                     li{
                         height: 50px;
                         margin: 15px 0;
-                        padding: 0 20px;
+                        padding-left: 20px;
                         input{
                             height: 30px;
-                            width: 100%;
+                            width: 80%;
                             color: #787d82;
                             padding-left: 10px;
                             margin-top: 10px;
                             border-radius: 5px;
                             border: 1px solid #d9dde1;
                         }
+                        span{
+                            padding: 7px 20px;
+                            margin-left: 5px;
+                            border-radius: 5px;
+                            color: #787d82;
+                            cursor: pointer;
+                            background-color: #f3f5f7;
+                            &:hover{
+                                color: #555;
+                            }
+                        }
                         &.gender{
-                            span{
-                                display: block;
-                                width: 60px;
-                                height: 30px;
-                                float: left;
-                                color: #787d82;
-                                cursor: pointer;
-                                text-align: center;
-                                line-height: 30px;
-                                margin: 10px 5px;
-                                border-radius: 5px;
-                                border: 1px solid #d9dde1;
-                                &.active{
-                                    border: 1px solid #3b6add;
+                            > div{
+                                display: inline-block;
+                                width: 80%;
+                                em{
+                                    display: inline-block;
+                                    width: 60px;
+                                    height: 30px;
+                                    color: #787d82;
+                                    font-style: normal;
+                                    cursor: pointer;
+                                    text-align: center;
+                                    line-height: 30px;
+                                    margin: 10px 5px;
+                                    border-radius: 5px;
+                                    border: 1px solid #d9dde1;
+                                    &.active{
+                                        border: 1px solid #3b6add;
+                                    }
                                 }
                             }
                         }
@@ -140,24 +224,6 @@ export default {
             }
         }
         
-    }
-    .btn{
-        margin: 10px 0;
-        span{
-            display: block;
-            margin: 0 auto;
-            width: 90px;
-            height: 40px;
-            text-align: center;
-            line-height: 40px;
-            border-radius: 5px;
-            color: #787d82;
-            cursor: pointer;
-            background-color: #f3f5f7;
-            &:hover{
-                color: #555;
-            }
-        }
     }
 }
 </style>

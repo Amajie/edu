@@ -75,7 +75,7 @@ function getSql(sql, params, callback) {
       return callback(null, {
         sql: sql,
         params: params
-      });
+      })
     }
     return {
       sql: sql,

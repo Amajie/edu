@@ -21,6 +21,9 @@ import Footerbar from '@/components/home/Footerbar.vue'
 
 export default {
     name: 'home',
+    created(){
+        console.log(this.$store.state.users)
+    },
     components:{
         // 头部
         Navbar,
