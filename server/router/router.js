@@ -4,6 +4,7 @@ const router = express.Router()
 const md5 = require('md5')
 const fs = require('fs')
 const path = require('path')
+const multiparty = require('multiparty')
 
 const {execTrans, getSql} = require('../mysql/connect.js')
 
@@ -55,6 +56,7 @@ router.post('/register', (req, res) =>{
 
 })
 
+// 更新用户 的信息 除了头像
 router.post('/update_user', (req, res) =>{
     let {setVal, setKey}  = req.body
 
@@ -71,6 +73,82 @@ router.post('/update_user', (req, res) =>{
         res.json({"msg": "修改成功", "code": 200})
 
     })
+})
+
+
+// 用户视频上传
+router.post('/upload_video', (req, res) =>{
+    new multiparty.Form({uploadDir}).parse(req, function(err, fields, files){
+
+        const [chunk] = files.chunk
+        let [filename] = fields.filename
+        // console.log(fs.existsSync(uploadDir))
+        const readStream = fs.createReadStream(chunk.path)
+        const writeStream = fs.createWriteStream(`${writeDir}/${filename}`)
+
+        readStream.pipe(writeStream)
+
+        readStream.on('end', function(err, data) {
+            // 删除文件
+            fs.unlinkSync(chunk.path)
+        })
+
+        res.send('asdas')
+    })        
+})
+
+// 合并视频
+router.get('/merge', (req, res) =>{
+    const pathList = fs.readdirSync(writeDir)
+
+    const filename = Math.random().toString().slice(-4) + '.mp4'
+
+    pathList.sort(function(a,b){
+        if(a > b){
+            return 1
+        }else{
+            return -1
+        }
+    }).forEach(item =>{
+        // 合并文件
+        fs.appendFileSync(`${videoDir}/${filename}`, fs.readFileSync(`${writeDir}/${item}`))
+        // 删除 文件
+        fs.unlinkSync(`${writeDir}/${item}`)
+    })
+
+
+    res.send('asdas')
+
+})
+
+// 创建视频集
+router.post('/set_title', (req, res) =>{
+
+    const {listTitle} = req.body
+    const listUserId = req.session.userId
+    const listId = getId()
+    const insert = `insert into lists(listId, listTitle, listUserId) values('${listId}','${listTitle}', '${listUserId}')`
+
+    execTrans([getSql(insert, '')], err =>{
+        if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+
+        res.json({"msg": "创建成功", "code":200, title: {listTitle, listUserId, listId}})
+    })
+
+
+})
+// 获取视频集
+router.post('/get_title', (req, res) =>{
+
+    const insert = `select listId, listTitle, listUserId from lists where listUserId='${req.session.userId}'`
+
+    execTrans([getSql(insert, '')], (err, data) =>{
+        if(err) return res.json({"msg": "获取失败", "code": 500, listData: []})
+        
+        res.json({"msg": "获取成功", "code":200, listData: data[0]})
+    })
+
+
 })
 
 

@@ -44,29 +44,14 @@
                 <div>
                     <div class="nav">
                         <ul>
-                            <li title="个人信息" class="active"> 
-                                <i class="icon iconfont">&#xe7bb;</i>
-                                <span>个人信息</span>
-                            </li>
-                            <li title="我的课程">
-                                <i class="icon iconfont">&#xe613;</i>
-                                <span>我的课程</span>
-                            </li>
-                            <li title="社区">
-                                <i class="icon iconfont">&#xe61f;</i>
-                                <span>我的社区</span>
-                            </li>
-                            <li title="创建社区">
-                                <i class="icon iconfont">&#xe61f;</i>
-                                <span>创建社区</span>
-                            </li>
-                            <li title="关注">
-                                <i class="icon iconfont">&#xe61f;</i>
-                                <span>我的关注</span>
-                            </li>
-                            <li title="关注">
-                                <i class="icon iconfont">&#xe61f;</i>
-                                <span>我的粉丝</span>
+                            <li 
+                                v-for="(item, index) in navList"
+                                :key="index"
+                                :title="item.title"
+                                @click="handleNav(index, item.component)" 
+                                :class="{active: activeIndex === index}"> 
+                                <i class="icon iconfont" v-html="item.icon"></i>
+                                <span>{{item.title}}</span>
                             </li>
                         </ul>
                     </div>
@@ -92,7 +77,27 @@ export default {
     name: 'person',
     data(){
         return {
+            navList: [
+                {title: '个人信息', icon: '&#xe7bb;', component: User},
+                {title: '我的课程', icon: '&#xe613;', component: MyCourse},
+                {title: '我的社区', icon: '&#xe61f;', component: User},
+                {title: '创建社区', icon: '&#xe61f;', component: User},
+                {title: '我的粉丝', icon: '&#xe61f;', component: User},
+            ],
+            activeIndex: 0,
             childComponent: User
+        }
+    },
+    methods: {
+        // 处理 点击nav 跳转
+        handleNav(index, component){
+            // 设置当前索引
+            this.activeIndex = index
+
+            // 设置当前显示的组件
+            this.childComponent = component
+
+
         }
     },
     components:{
@@ -227,7 +232,7 @@ export default {
                             }
                             .icon{
                                 position: absolute;
-                                top: 13px;
+                                top: 7px;
                                 left: 20px;
                                 font-size: 25px;
                                 color: #787d82;

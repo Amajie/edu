@@ -5,7 +5,7 @@
                <ul>
                    <li>
                         <em>用户名</em>
-                        <span>{{users.userName}}</span>
+                        <span>{{users.userName? users.userName: '暂无用户'}}</span>
                    </li>
                    <li>
                         <em>密码</em>
@@ -125,7 +125,7 @@ export default {
 
                 // 更新 vuex 数据 密码不需要更新
                 key === 'userCode' || setUsers({...users, [key]: value})
-
+                this[key] = ''
                 $Message.success('修改成功')
 
             })
