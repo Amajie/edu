@@ -77,15 +77,29 @@ router.post('/update_user', (req, res) =>{
 
 
 // 用户视频上传
-router.post('/upload_video', (req, res) =>{
-    new multiparty.Form({uploadDir}).parse(req, function(err, fields, files){
+router.post('/upload_video_cut', (req, res) =>{
 
+    // 获取 切片文件夹 路径
+    const cutDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/cut')
+
+
+
+    new multiparty.Form({uploadDir: cutDir}).parse(req, function(err, fields, files){
+
+
+        if(err){
+            return res.json({"msg": "上传失败", "code": 500})
+        }
+        
+        // 获取 切片相关信息
         const [chunk] = files.chunk
-        let [filename] = fields.filename
-        // console.log(fs.existsSync(uploadDir))
+        const [filename] = fields.filename
+        
+        const writeDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/merge')
+
         const readStream = fs.createReadStream(chunk.path)
         const writeStream = fs.createWriteStream(`${writeDir}/${filename}`)
-
+        // 此时应该要判断 chunk.path存在与否
         readStream.pipe(writeStream)
 
         readStream.on('end', function(err, data) {
@@ -93,15 +107,19 @@ router.post('/upload_video', (req, res) =>{
             fs.unlinkSync(chunk.path)
         })
 
-        res.send('asdas')
+        res.json({"msg": "上传成功", "code": 200})
     })        
 })
 
 // 合并视频
-router.get('/merge', (req, res) =>{
+router.post('/merge_cut', (req, res) =>{
+
+    const writeDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/merge/')
+    const videoDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/')
+
     const pathList = fs.readdirSync(writeDir)
 
-    const filename = Math.random().toString().slice(-4) + '.mp4'
+    const filename = getId() + '.mp4'
 
     pathList.sort(function(a,b){
         if(a > b){
@@ -110,6 +128,7 @@ router.get('/merge', (req, res) =>{
             return -1
         }
     }).forEach(item =>{
+        console.log(item)
         // 合并文件
         fs.appendFileSync(`${videoDir}/${filename}`, fs.readFileSync(`${writeDir}/${item}`))
         // 删除 文件

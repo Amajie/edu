@@ -3,14 +3,25 @@
         <div class="upload-content">
             <!-- 视频上传 -->
             <div class="video">
-                <div class="btn-desc">
+                <div v-if="!progressWidth" class="btn-desc">
                     <div class="btn">
                         <span>上传视频</span>
-                        <input type="file">
+                        <input @change="getVideo($event)" type="file">
                     </div>
                     <div class="desc">
                         <span>当前审核队列</span>
                         <span class="info">繁忙</span>
+                    </div>
+                </div>
+                <div v-else class="progress">
+                    <p>
+                        <span>取消上传</span>
+                    </p>
+                    <div>
+                        <p>
+                            <i :style="{'width': progressWidth}"></i>
+                        </p>
+                        <span>{{progressWidth}}</span>
                     </div>
                 </div>
             </div>
@@ -81,7 +92,7 @@
                 </div>
             </div>
             <div class="video-btn">
-                <span class="up">立即上传</span>
+                <span class="up" @click="handleMerge">立即上传</span>
                 <span class="re">取消上传</span>
             </div>
         </div>
@@ -134,8 +145,8 @@
 
 <script>
 
-import {setTitle, getTitle} from '@/axios/index'
-
+import {setTitle, getTitle, uploadVideoCut, mergeCut} from '@/axios/index'
+import axios from 'axios'
 export default {
     data(){
         return {
@@ -144,7 +155,10 @@ export default {
             listTitle: '',
             titleFlag: false,
             titleLoading: false,
-            listData: []
+            listData: [],
+            // 每个切片的长度
+            cutSize:  1000000*10, // 200m 一个切片
+            progressWidth: ''
         }
     },
     created(){
@@ -153,6 +167,98 @@ export default {
         })
     },
     methods:{
+
+        // 处理 视频封面
+        // 前端应用canvas获取video
+        creatImg(video){
+
+            // const canvas = document.createElement('canvas')
+            // const ctx = canvas.getContext('2d')
+            // const imgHeight = video.videoHeight
+            // const imgWidth = video.videoWidth
+
+            // ctx.drawImage(video, 0, 0, imgWidth, imgHeight)
+
+            // const imgSrc = canvas.toDataURL('image/png')
+
+            console.log(video.videoHeight)
+        },
+
+        // 获取视频
+        getVideo(ev){
+
+            const {cutSize} = this
+            const file = ev.target.files[0]
+            // 切片起点
+            let cutStart = 0
+            // 切片个数
+            let cutNum = Math.ceil(file.size/cutSize)
+
+            console.log(cutNum)
+
+
+
+            let cutList = []
+            let index = 0
+            let currentLoad = 0
+
+            while(index < cutNum) {
+                cutList.push({
+                    chunk: file.slice(cutStart, cutStart + cutSize),
+                    filename: `${index}-${file.name}`,
+                    lastLoaded: 0
+                })
+                // 切片 七点增加
+                cutStart += cutSize
+
+                index++
+            }
+
+            cutList = cutList.map(item => {
+                const formData = new FormData()
+                formData.append('chunk', item.chunk)
+                formData.append('filename', item.filename)
+                
+                return axios({
+                    url: '/api/upload_video_cut',
+                    method: 'post',
+                    data: formData,
+                    onUploadProgress: progress =>{
+
+                        let cutLoaded = progress.loaded - item.lastLoaded
+                        
+                        currentLoad += cutLoaded
+                        // 这里需要注意 总的 currentLoad 是比 file.size大的
+                        // 因此这里四舍五入  有可能 会超过百分之百 因此这里判断 有没有超过 100
+                        const progressNum = (Math.round(currentLoad/file.size*100)/100)*100                     
+                        this.progressWidth = (progressNum < 100 ? progressNum.toString().split('.')[0]: 100) + '%' 
+                        console.log(file.size, currentLoad)
+                        item.lastLoaded = progress.loaded
+                    }
+                }).then(res =>{
+                    // console.log(res)
+                    if(res.data.code === 200){
+                        index--
+                    }
+
+                    // 说明 切片已经发送完毕
+                    if(index === 0){
+                        // this.handleMerge()
+                        console.log('切片上传完毕')
+                    }
+
+                })
+            })
+        },
+
+        // 处理合并切片
+        handleMerge(){
+            mergeCut().then(res =>{
+                console.log(res)
+            })
+        },
+
+
         // 创建视频集合
         handleTitle(){
 
@@ -330,6 +436,44 @@ export default {
                         color: #fff;
                         border-radius: 3px;
                         background-color: #ffbd2d;
+                    }
+                }
+            }
+            .progress{
+                padding: 0 10px;
+                width: 100%;
+                height: 50px;
+                position: absolute;
+                top: 50%;
+                left: 0;
+                margin-top: -25px;
+                > p{
+                    text-align: right;
+                    margin-bottom: 10px;
+                }
+                > div{
+                    height: 20px;
+                    > p{
+                        position: relative;
+                        width: 95%;
+                        height: 6px;
+                        margin-top: 7px;
+                        float: left;
+                        border-radius: 5px;
+                        overflow: hidden;
+                        background-color: #e7e7e7;
+                        i{
+                            display: block;
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            height: 100%;
+                            background-color: #000;
+                        }
+                    }
+                    > span{
+                        display: block;
+                        float: right;
                     }
                 }
             }
