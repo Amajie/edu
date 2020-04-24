@@ -15,36 +15,13 @@
                 </div>
                 <div v-else class="progress">
                     <p>
-                        <span>取消上传</span>
+                        <span>{{uplodaVideoText}}</span>
                     </p>
                     <div>
                         <p>
-                            <i :style="{'width': progressWidth}"></i>
+                            <i :style="{'width': progressWidth, backgroundColor: progressWidth === '100%'? '#43ce5b': '#000'}"></i>
                         </p>
                         <span>{{progressWidth}}</span>
-                    </div>
-                </div>
-            </div>
-            <!-- 分面设置 -->
-            <div class="video-pic">
-                <div>
-                    <div class="title">
-                        <h1>视频封面设置</h1>
-                    </div>
-                    <div class="content">
-                        <div class="left-pic">
-                            <img src="../../home/imgs/i1.png">
-                            <span>上传封面</span>
-                            <input title="上传封面" type="file">
-                        </div>
-                        <div class="right-pic">
-                            <div>
-                                <span>可选择以下几个封面</span>
-                                <img src="../../home/imgs/i1.png" alt="">
-                                <img src="../../home/imgs/i1.png" alt="">
-                                <img src="../../home/imgs/i1.png" alt="">
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -108,6 +85,17 @@
             </p>
             <div style="text-align:center">
                 <input class="create-title" v-model="listTitle" placeholder="请输入视频集标题" />
+                <div class="upload-video-pic">
+                    <div>
+                        <div class="upload">
+                            <input type="file">
+                            <span>上传封面</span>
+                        </div>
+                        <div class="pic">
+                            <img src="../imgs/page_pic.png">
+                        </div>
+                    </div>
+                </div>
             </div>
             <div slot="footer">
                 <Button @click.native="handleclose">取消</Button>
@@ -157,8 +145,13 @@ export default {
             titleLoading: false,
             listData: [],
             // 每个切片的长度
-            cutSize:  1000000*10, // 200m 一个切片
-            progressWidth: ''
+            cutSize:  1000000*200, // 200m 一个切片
+            cutNum: 5, // 最多切片的个数
+            // progressWidth: '',
+            cutList: [],
+            currentLoad: 0, // 当前下载的量
+            fileSize: 0, // 视频的大小
+            uplodaVideoText: '取消上传'
         }
     },
     created(){
@@ -168,44 +161,40 @@ export default {
     },
     methods:{
 
-        // 处理 视频封面
-        // 前端应用canvas获取video
-        creatImg(video){
-
-            // const canvas = document.createElement('canvas')
-            // const ctx = canvas.getContext('2d')
-            // const imgHeight = video.videoHeight
-            // const imgWidth = video.videoWidth
-
-            // ctx.drawImage(video, 0, 0, imgWidth, imgHeight)
-
-            // const imgSrc = canvas.toDataURL('image/png')
-
-            console.log(video.videoHeight)
-        },
-
         // 获取视频
         getVideo(ev){
 
-            const {cutSize} = this
+            let {cutSize, cutNum} = this
+
             const file = ev.target.files[0]
+            // 设置大小
+            this.fileSize = file.size
+            // 先清除数据
+            this.cutList = []
+
+            // 先判断 切片 个数是否大于 cutNum
+            // 判断file.size  cutSize*cutNum 的大小即可
+            if(file.size <= cutSize*cutNum){
+                // 切片个数
+                cutNum = Math.ceil(file.size/cutSize)
+            // 否则切片个数为 cutNum 求 cutSize
+            }else{
+                cutSize = file.size/cutNum
+            }
+
+
+            let index = 0
             // 切片起点
             let cutStart = 0
-            // 切片个数
-            let cutNum = Math.ceil(file.size/cutSize)
-
-            console.log(cutNum)
-
-
-
-            let cutList = []
-            let index = 0
-            let currentLoad = 0
+            // 设置文件名字
+            const filename = Date.now() + file.name
 
             while(index < cutNum) {
-                cutList.push({
+                this.cutList.push({
                     chunk: file.slice(cutStart, cutStart + cutSize),
-                    filename: `${index}-${file.name}`,
+                    // filename: index + Date.now() + file.name,
+                    filename,
+                    index,
                     lastLoaded: 0
                 })
                 // 切片 七点增加
@@ -214,50 +203,52 @@ export default {
                 index++
             }
 
-            cutList = cutList.map(item => {
-                const formData = new FormData()
-                formData.append('chunk', item.chunk)
-                formData.append('filename', item.filename)
-                
-                return axios({
-                    url: '/api/upload_video_cut',
-                    method: 'post',
-                    data: formData,
-                    onUploadProgress: progress =>{
 
-                        let cutLoaded = progress.loaded - item.lastLoaded
-                        
-                        currentLoad += cutLoaded
-                        // 这里需要注意 总的 currentLoad 是比 file.size大的
-                        // 因此这里四舍五入  有可能 会超过百分之百 因此这里判断 有没有超过 100
-                        const progressNum = (Math.round(currentLoad/file.size*100)/100)*100                     
-                        this.progressWidth = (progressNum < 100 ? progressNum.toString().split('.')[0]: 100) + '%' 
-                        console.log(file.size, currentLoad)
-                        item.lastLoaded = progress.loaded
-                    }
-                }).then(res =>{
-                    // console.log(res)
-                    if(res.data.code === 200){
-                        index--
-                    }
+            this.sendVideoCut(this.cutList[0])
 
-                    // 说明 切片已经发送完毕
-                    if(index === 0){
-                        // this.handleMerge()
-                        console.log('切片上传完毕')
-                    }
+        },
 
-                })
+
+        // 发送 切片
+        sendVideoCut(videoData){
+            
+            const formData = new FormData()
+            formData.append('chunk', videoData.chunk)
+            formData.append('filename', videoData.filename)
+            formData.append('index', videoData.index)
+
+            axios({
+                url: '/api/upload_video_cut',
+                method: 'post',
+                data: formData,
+                onUploadProgress: progress =>{
+
+                    let cutLoaded = progress.loaded - videoData.lastLoaded
+                    
+                    this.currentLoad += cutLoaded
+
+                    // // 保存当前 上传大小
+                    videoData.lastLoaded = progress.loaded
+                }
+            }).then(res =>{
+                const {code, index} = res.data
+                if(code === 200){
+                    this.cutList[index] && this.sendVideoCut(this.cutList[index])
+                }else{
+                    // 说明 失败了 发送请求 删除切片
+
+                }                        
             })
         },
 
         // 处理合并切片
         handleMerge(){
             mergeCut().then(res =>{
-                console.log(res)
+                if(res.data.code === 200){
+                    console.log('合并成功')
+                }
             })
         },
-
 
         // 创建视频集合
         handleTitle(){
@@ -313,6 +304,26 @@ export default {
             // 关闭
             this.titleFlag = false
         }
+    },
+    computed:{
+        progressWidth(){
+            
+            // 如果为 0 表示没上传文件 返回 0 即可
+            if(!this.fileSize) return 0
+            // 否则 获取百分比 this.currentLoad 为当前下载量 this.fileSize为视频大小
+            const progressNum = (Math.round(this.currentLoad/this.fileSize*100)/100)*100
+            // 这里需要注意 总的 currentLoad 是比 file.size大的
+            // 因此这里四舍五入  有可能 会超过百分之百 因此这里判断 有没有超过 100
+            return (progressNum < 100? progressNum.toString().split('.')[0]: 100) + '%'     
+        }
+    },
+    watch:{
+        progressWidth(newVal, oldVal){
+           // 此时 判断是否上传完毕
+           if(newVal === '100%'){
+               this.uplodaVideoText = '删除视频'
+           }
+        }
     }
 }
 </script>
@@ -322,12 +333,54 @@ export default {
     .create-title{
         width: 100%;
         height: 30px;
-        margin: 10px 0;
+        margin-bottom: 10px;
         padding-left: 10px;
         color: #ccd0d7;
         border: 1px solid #ccd0d7;
         border-radius: 5px;
         outline: none;
+    }
+    .upload-video-pic{
+        > div{
+            height: 100px;
+            padding: 5px;
+            border: 1px dashed #e7e7e7;
+            .upload{
+                position: relative;
+                width: 130px;
+                height: 90px;
+                float: left;
+                overflow: hidden;
+                border: 1px dashed #e7e7e7;
+                input{
+                    position: absolute;
+                    left: -80px;
+                    top: 0;
+                    width: 300%;
+                    height: 300%;
+                    opacity: 0;
+                    z-index: 3;
+                    cursor: pointer;
+                }
+                span{
+                    line-height: 90px;
+                    font-size: 13px;
+                }
+            }
+            .pic{
+                float: left;
+                width: 130px;
+                height: 90px;
+                margin-left: 10px;
+                background-color: #f3f5f7;
+                border: 1px dashed #e7e7e7;
+                img{
+                    width: 30px;
+                    height: 30px;
+                    margin: 30px 50px;
+                }
+            }
+        }
     }
      // 视频集合
     .title-list{
@@ -450,6 +503,13 @@ export default {
                 > p{
                     text-align: right;
                     margin-bottom: 10px;
+                    // 取消上传
+                    span{
+                        cursor: pointer;
+                        &:hover{
+                            text-decoration: underline;
+                        }
+                    }
                 }
                 > div{
                     height: 20px;
@@ -462,15 +522,20 @@ export default {
                         border-radius: 5px;
                         overflow: hidden;
                         background-color: #e7e7e7;
+                        // 进度条颜色
                         i{
                             display: block;
                             position: absolute;
                             left: 0;
                             top: 0;
                             height: 100%;
-                            background-color: #000;
+                        }
+                        // 成功颜色
+                        .success{
+                            background-color: #43ce5b;
                         }
                     }
+                    
                     > span{
                         display: block;
                         float: right;
@@ -496,77 +561,6 @@ export default {
                 background-color: #f3f5f7 ;
                 &:hover{
                     color: #7c8182;
-                }
-            }
-        }
-        // 封面
-        .video-pic{
-            > div{
-                .content{
-                    position: relative;
-                    height: 120px;
-                    .left-pic{
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 200px;
-                        height: 100%;
-                        cursor: pointer;
-                        overflow: hidden;
-                        border: 1px dashed #e7e7e7;
-                        &:hover span{
-                            background-color: #adadad;
-                        }
-                        input{
-                            position: absolute;
-                            left: -80px;
-                            top: 0;
-                            width: 300%;
-                            height: 300%;
-                            opacity: 0;
-                            cursor: pointer;
-                        }
-                        span{
-                            position: absolute;
-                            right: 1px;
-                            bottom: 1px;
-                            color: #fff;
-                            padding: 3px;
-                            background-color: #999999;
-                        }
-                        img{
-                            position: absolute;
-                            left: 50%;
-                            top: 50%;
-                            width: 40px;
-                            height: 40px;
-                            margin: -20px;
-                        }
-                    }
-                    .right-pic{
-                        position: absolute;
-                        left: 250px;
-                        top: 0;
-                        min-width: 450px;
-                        width: calc(100% - 460px);
-                        height: 100%;
-                        border: 1px dashed #e7e7e7;
-                        > div{
-                            padding: 5px;
-                            span{
-                                display: block;
-                                font-size: 13px;
-                                color: #787d82;
-                                margin-bottom: 10px;
-                            }
-                            img{
-                                width: 120px;
-                                height: 80px;
-                                border-radius: 10px;
-                                margin: 0 10px;
-                            }
-                        }
-                    }
                 }
             }
         }

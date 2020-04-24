@@ -8,7 +8,6 @@ const multiparty = require('multiparty')
 
 const {execTrans, getSql} = require('../mysql/connect.js')
 
-
 // 登陆 
 router.post('/login', (req, res) =>{
     // 获取参数
@@ -82,8 +81,6 @@ router.post('/upload_video_cut', (req, res) =>{
     // 获取 切片文件夹 路径
     const cutDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/cut')
 
-
-
     new multiparty.Form({uploadDir: cutDir}).parse(req, function(err, fields, files){
 
 
@@ -94,51 +91,30 @@ router.post('/upload_video_cut', (req, res) =>{
         // 获取 切片相关信息
         const [chunk] = files.chunk
         const [filename] = fields.filename
+        const [index] = fields.index
         
         const writeDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/merge')
+        
+        fs.appendFileSync(`${writeDir}/${filename}`, fs.readFileSync(chunk.path))
+        // 删除文件
+        fs.unlinkSync(chunk.path)
+        // 成功
+        res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
 
-        const readStream = fs.createReadStream(chunk.path)
-        const writeStream = fs.createWriteStream(`${writeDir}/${filename}`)
-        // 此时应该要判断 chunk.path存在与否
-        readStream.pipe(writeStream)
 
-        readStream.on('end', function(err, data) {
-            // 删除文件
-            fs.unlinkSync(chunk.path)
-        })
+        // const readStream = fs.createReadStream(chunk.path)
+        // const writeStream = fs.createWriteStream(`${writeDir}/${filename}`)
+        // // 此时应该要判断 chunk.path存在与否
+        // readStream.pipe(writeStream)
 
-        res.json({"msg": "上传成功", "code": 200})
+        // readStream.on('end', function(err, data) {
+        //     // 删除文件
+        //     fs.unlinkSync(chunk.path)
+        //     res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
+        // })
     })        
 })
 
-// 合并视频
-router.post('/merge_cut', (req, res) =>{
-
-    const writeDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/merge/')
-    const videoDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/')
-
-    const pathList = fs.readdirSync(writeDir)
-
-    const filename = getId() + '.mp4'
-
-    pathList.sort(function(a,b){
-        if(a > b){
-            return 1
-        }else{
-            return -1
-        }
-    }).forEach(item =>{
-        console.log(item)
-        // 合并文件
-        fs.appendFileSync(`${videoDir}/${filename}`, fs.readFileSync(`${writeDir}/${item}`))
-        // 删除 文件
-        fs.unlinkSync(`${writeDir}/${item}`)
-    })
-
-
-    res.send('asdas')
-
-})
 
 // 创建视频集
 router.post('/set_title', (req, res) =>{

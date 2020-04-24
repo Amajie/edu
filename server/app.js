@@ -18,6 +18,8 @@ app.use(session({
   cookie: { secure: false, maxAge: 1000*90*4}
 }))
 
+app.use(express.static('upVideo'))
+
 app.use(router)
 
 
