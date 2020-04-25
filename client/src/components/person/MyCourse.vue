@@ -2,12 +2,14 @@
     <div class="my-course">
         <div class="my-course-content">
             <div class="nav-item">
-                <span class="active">我的发布</span>
-                <span>我的收藏</span>
-                <span>发布课程</span>
+                <span
+                    v-for="(item, index) in navData"
+                    :key="index" 
+                    :class="{active: activeIndex === index}"
+                    @click="handleNav(index, item.component)">{{item.title}}</span>
             </div>
             <div class="content">
-                <UploadVideo></UploadVideo>
+                <components :is="childComponent"></components>
             </div>
         </div>
     </div>
@@ -15,12 +17,35 @@
 <script>
 
 import UploadVideo  from './course/UploadVidei.vue'
+import MyVideo  from './course/MyVideo.vue'
 
 export default {
-    name: 'myCourse',
+    name: 'fdgfdg',
+    data(){
+        return {
+            childComponent: MyVideo,
+            MyVideo: MyVideo,
+            UploadVideo: UploadVideo,
+            activeIndex: 0,
+            navData: [
+                {title: '我的上传', component: MyVideo},
+                {title: '我的发布', component: MyVideo},
+                {title: '我的收藏', component: MyVideo},
+                {title: '发布课程', component: UploadVideo}
+            ]
+        }
+    },
+    methods:{
+        handleNav(index, component){
+            this.childComponent = component
+            this.activeIndex = index
+        }
+    },
     components:{
         // 视频上传
-        UploadVideo
+        UploadVideo,
+        // 我的视频
+        MyVideo
     }
 }
 </script>

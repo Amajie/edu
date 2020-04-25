@@ -9,7 +9,8 @@ import '@/assets/icon/iconfont.css'
 import '@/assets/icon/iconfont.js'
 
 import 'view-design/dist/styles/iview.css'
-import { Button, Message, Modal, Icon, List, DropdownMenu, Dropdown, DropdownItem} from 'view-design'
+import { Button, Message, Modal, Icon, List, DropdownMenu, Dropdown, DropdownItem,
+  RadioGroup, Radio, Page} from 'view-design'
 
 Vue.component('Button', Button)
 Vue.component('Icon', Icon)
@@ -18,6 +19,9 @@ Vue.component('List', List)
 Vue.component('DropdownMenu', DropdownMenu)
 Vue.component('Dropdown', Dropdown)
 Vue.component('DropdownItem', DropdownItem)
+Vue.component('RadioGroup', RadioGroup)
+Vue.component('Radio', Radio)
+Vue.component('Page', Page)
 
 Vue.prototype.$Message = Message
 Vue.prototype.$Modal = Modal

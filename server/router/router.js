@@ -116,22 +116,73 @@ router.post('/upload_video_cut', (req, res) =>{
 })
 
 
+// 插入视频数据到数据库
+router.post('/insert_video', (req, res) =>{
+    // 获取数据 filename 为视频的名字 listId 为视频集 唯一id
+    const {videoTitle, videoDesc, filename, listId} = req.body
+    // 获取id
+    const videoId = getId()
+
+    // 视频集添加数据
+    const insert1 = `update lists set listVideo=CONCAT(listVideo, '${videoId},') where listId='${listId}'`
+    // 添加视频
+    const insert2 = `insert into videos(videoId, videoTitle, videoDesc, videoUrl) values('${videoId}', '${videoTitle}', '${videoDesc}', '${filename}')`
+
+    console.log([getSql(insert1, ''), getSql(insert2, '')])
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], err =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+
+        res.json({"msg": "创建成功", "code":200})
+    })
+
+     
+})
+
+
 // 创建视频集
 router.post('/set_title', (req, res) =>{
 
-    const {listTitle} = req.body
+
     const listUserId = req.session.userId
     const listId = getId()
-    const insert = `insert into lists(listId, listTitle, listUserId) values('${listId}','${listTitle}', '${listUserId}')`
 
-    execTrans([getSql(insert, '')], err =>{
-        if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+    // 获取 封面 路径
+    const posterDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/poster')
 
-        res.json({"msg": "创建成功", "code":200, title: {listTitle, listUserId, listId}})
-    })
+    // 上传 封面 图片
+    new multiparty.Form({uploadDir: posterDir}).parse(req, function(err, fields, files){
+
+        
+        if(!files.listPoster || !fields.listTitle || !fields.listGrade || err){
+            return res.json({"msg": "上传失败", "code": 500})
+        }
+        
+        // 获取 切片相关信息
+        let [listPoster] = files.listPoster
+        let [listTitle] = fields.listTitle
+        let [listGrade] = fields.listGrade
+
+        
+        // C:\vsCode\edu\server\upVideo\soqhusclecw0000000\poster\xtMn528Vd4adhhzK4UblUK92.jpg
+        // 根据 \ 转换为数组 截取最后一个数据即可
+        listPoster = listPoster.path.split('\\').pop()
 
 
+        const insert = `insert into lists(listId, listTitle, listUserId, listPoster, listGrade) 
+                        values('${listId}','${listTitle}', '${listUserId}', '${listPoster}', '${listGrade}')`
+        
+        execTrans([getSql(insert, '')], err =>{
+            console.log(err)
+            if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+    
+            res.json({"msg": "创建成功", "code":200, title: {listTitle, listUserId, listId}})
+        })
+
+    })    
 })
+
+
 // 获取视频集
 router.post('/get_title', (req, res) =>{
 

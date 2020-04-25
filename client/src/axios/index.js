@@ -20,4 +20,4 @@ export const uploadVideoCut = data => ajax({
     }
 })
 // 合并视频切片
-export const mergeCut = data => ajax({url: '/merge_cut', data, method: 'post'})
+export const insertVideo = data => ajax({url: '/insert_video', data, method: 'post'})

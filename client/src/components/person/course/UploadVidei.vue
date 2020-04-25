@@ -34,7 +34,7 @@
                     </div>
                     <div class="print select-title">
                         <div class="input">
-                            <input v-model="currentTitle" readonly placeholder="点击<右侧选择>按钮，选择视频集">
+                            <input v-model="selectTitle" readonly placeholder="点击<右侧选择>按钮，选择视频集">
                         </div>
                         <p @click="titleFlag = true">选择</p>
                     </div>
@@ -48,7 +48,7 @@
                     </div>
                     <div class="print">
                         <div class="input">
-                            <input placeholder="请输入标题">
+                            <input v-model="videoTitle" placeholder="请输入标题">
                         </div>
                         <p>20/80</p>
                     </div>
@@ -62,15 +62,15 @@
                     </div>
                     <div class="print">
                         <div class="input">
-                            <textarea placeholder="请输入相关简介"></textarea>
+                            <textarea v-model="videoDesc" placeholder="请输入相关简介"></textarea>
                         </div>
                         <p>20/80</p>
                     </div>
                 </div>
             </div>
             <div class="video-btn">
-                <span class="up" @click="handleMerge">立即上传</span>
-                <span class="re">取消上传</span>
+                <span class="up" @click="sendVideo">立即上传</span>
+                <span class="re" @click="clearData">一键清空</span>
             </div>
         </div>
         <Modal 
@@ -88,14 +88,22 @@
                 <div class="upload-video-pic">
                     <div>
                         <div class="upload">
-                            <input type="file">
+                            <input @change="getPoster" type="file">
                             <span>上传封面</span>
                         </div>
                         <div class="pic">
-                            <img src="../imgs/page_pic.png">
+                            <img v-if="!showPoster" src="../imgs/page_pic.png">
+                            <img v-else class="show-poster" :src="showPoster">
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="video-grade">
+                <RadioGroup v-model="listGrade">
+                    <Radio label="1" >初级课程</Radio>
+                    <Radio label="2">进阶能手</Radio>
+                    <Radio label="3">高级无敌</Radio>
+                </RadioGroup>
             </div>
             <div slot="footer">
                 <Button @click.native="handleclose">取消</Button>
@@ -111,7 +119,7 @@
                 </div>
                 <ul v-if="listData.length">
                     <li v-for="(item, index) in listData" :key="index"
-                        @click="setCurrentTitle(item)"
+                        @click="setselectTitle(item)"
                     >{{item.listTitle}}</li>
                 </ul>
                 <div v-else class="no-title">
@@ -133,21 +141,27 @@
 
 <script>
 
-import {setTitle, getTitle, uploadVideoCut, mergeCut} from '@/axios/index'
+import {setTitle, getTitle, uploadVideoCut, insertVideo} from '@/axios/index'
 import axios from 'axios'
 export default {
     data(){
         return {
             titleModal: false,
-            currentTitle: '',
+            selectTitle: '',
             listTitle: '',
+            listId: '',
+            listGrade: '1',
+            listPoster: '',
+            showPoster: '',
+            filename: '',
+            videoDesc: '',
+            videoTitle:'',
             titleFlag: false,
             titleLoading: false,
             listData: [],
             // 每个切片的长度
             cutSize:  1000000*200, // 200m 一个切片
             cutNum: 5, // 最多切片的个数
-            // progressWidth: '',
             cutList: [],
             currentLoad: 0, // 当前下载的量
             fileSize: 0, // 视频的大小
@@ -187,13 +201,12 @@ export default {
             // 切片起点
             let cutStart = 0
             // 设置文件名字
-            const filename = Date.now() + file.name
+            this.filename = Date.now() + file.name
 
             while(index < cutNum) {
                 this.cutList.push({
                     chunk: file.slice(cutStart, cutStart + cutSize),
-                    // filename: index + Date.now() + file.name,
-                    filename,
+                    filename: this.filename,
                     index,
                     lastLoaded: 0
                 })
@@ -241,34 +254,67 @@ export default {
             })
         },
 
-        // 处理合并切片
-        handleMerge(){
-            mergeCut().then(res =>{
+        // 提交视频信息内容
+        sendVideo(){
+            const {listId, filename, videoDesc, videoTitle, $Message} = this
+            // 默认为false
+            let msg = false
+            // 一旦有数据不符合 相当于设置 为true
+            if(!filename){
+                msg = '还没上传视频哦'
+            }else if(!listId){
+                msg = '请选择视频集'
+            }else if(!videoTitle){
+                msg = '请输入视频标题'
+            }
+
+            // 为 true 提示相应的信息
+            if(msg) return $Message.warning(msg)
+
+            // 发送请求
+            insertVideo({
+                listId, filename, videoDesc, videoTitle
+            }).then(res =>{
                 if(res.data.code === 200){
-                    console.log('合并成功')
+                   this.clearData()
+                   $Message.success('提交成功')
                 }
             })
+        },
+
+        // 初始化数据
+        clearData(){
+            Object.assign(this.$data, this.$options.data(), {listData: this.listData})
         },
 
         // 创建视频集合
         handleTitle(){
 
-            const {listTitle, $Message} =this
+            const {listTitle, listPoster, listGrade, $Message} =this
 
             if(!listTitle) return $Message.warning('请输入标题')
+            if(!listPoster) return $Message.warning('请上传封面')
 
             // 否则显示loading
             this.titleLoading = true
 
+
+            const formData = new FormData()
+
+            formData.append('listTitle', listTitle)
+            formData.append('listPoster', listPoster)
+            formData.append('listGrade', listGrade)
+
             // 发送请求
-            setTitle({
-                listTitle
-            }).then(res=>{
+            setTitle(formData).then(res=>{
 
                 const {code, title} = res.data
 
                 // 失败
-                if(code === 500) return $Message.error('创建失败，请稍后再试')
+                if(code === 500){
+                    this.titleLoading = false
+                    return $Message.error('创建失败，请稍后再试')
+                }
                 
                 // 关闭 modal
                 this.handleclose()
@@ -277,10 +323,23 @@ export default {
 
             })
         },
+
+        // 获取封面
+        getPoster(ev){
+
+            this.listPoster = ev.target.files[0]
+            const WURL = window.URL || window.webkitURL || window.mozURL
+            
+            this.showPoster = WURL.createObjectURL(this.listPoster)
+
+
+        },
         // modal关闭回调
         handleclose(){
             this.titleLoading = false
             this.titleModal = false
+            this.showPoster = ''
+            this.listGrade = '1'
             this.listTitle = ''
         },
         // 再次获取数据
@@ -298,9 +357,10 @@ export default {
             })
         },
         // 选择 视频集
-        setCurrentTitle({listUserId, listTitle}){
+        setselectTitle({listUserId, listTitle, listId}){
             // 设置
-            this.currentTitle = listTitle
+            this.selectTitle = listTitle
+            this.listId = listId
             // 关闭
             this.titleFlag = false
         }
@@ -340,6 +400,9 @@ export default {
         border-radius: 5px;
         outline: none;
     }
+    .video-grade{
+        margin-top: 16px;
+    }
     .upload-video-pic{
         > div{
             height: 100px;
@@ -368,6 +431,7 @@ export default {
                 }
             }
             .pic{
+                position: relative;
                 float: left;
                 width: 130px;
                 height: 90px;
@@ -378,6 +442,14 @@ export default {
                     width: 30px;
                     height: 30px;
                     margin: 30px 50px;
+                }
+                .show-poster{
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    margin: 0;
                 }
             }
         }
