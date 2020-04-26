@@ -19,5 +19,5 @@ export const uploadVideoCut = data => ajax({
         'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary6g0D5xxay11G6igl'
     }
 })
-// 合并视频切片
+// 提交视频数据
 export const insertVideo = data => ajax({url: '/insert_video', data, method: 'post'})

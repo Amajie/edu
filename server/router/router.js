@@ -144,7 +144,7 @@ router.post('/insert_video', (req, res) =>{
 router.post('/set_title', (req, res) =>{
 
 
-    const listUserId = req.session.userId
+    const listUserId = 'req.session.userId'
     const listId = getId()
 
     // 获取 封面 路径
