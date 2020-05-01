@@ -29,6 +29,7 @@ export default {
             activeIndex: 0,
             navData: [
                 {title: '我的上传', component: MyVideo},
+                {title: '我的审核', component: MyVideo},
                 {title: '我的发布', component: MyVideo},
                 {title: '我的收藏', component: MyVideo},
                 {title: '发布课程', component: UploadVideo}

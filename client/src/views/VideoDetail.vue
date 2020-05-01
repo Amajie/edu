@@ -6,18 +6,17 @@
             <div class="detail-wrap">
                 <div class="detail-info">
                     <div class="info-pic">
-                        <img src="./imgs/detail.jpg">
+                        <img :src="listData.listPoster">
                     </div>
                     <div class="info-list">
-                        <h1 class="title">最新ThinkPHP 5.1全球首发视频教程(60天成就PHP大牛线上培训班课)</h1>
+                        <h1 class="title">{{listData.listTitle}}</h1>
                         <div class="video-desc">
                             <span>
-                                60天可以学会PHP编程吗？看了PHP中文网的教学计划,你就不会再怀疑啦！ 
-                                紧凑的课程安排,新颖的教学模式,全程学习监督,确保你的每一点进步,都将获得惊喜的回报~~
+                                {{listData.listDesc}}
                             </span>
                         </div>
                         <div class="video-attribute">
-                            中等 | 共79章节 | 852360次播放 | 添加时间：2018-01-17 15:00
+                            {{listData.listGrade | grade}} | 共{{videoData.length}}章节 | {{listData.listClick}}次点击量 | 添加时间：{{listData.listTime | dateTime(true)}}
                         </div>
                         <div class="video-btn">
                             <span class="study">开始学习</span>
@@ -38,16 +37,16 @@
                                     <img src="./imgs/detail.jpg">
                                 </div>
                                 <div class="user-name">
-                                    <h3>车神-黄杰</h3>
+                                    <h3>{{listData.userName}}</h3>
                                     <span class="btn">TA的课程</span>
                                 </div>
                             </div>
                             <div class="user-desc">
-                                <p>
+                                <!-- <p>
                                     全栈工程师
-                                </p>
+                                </p> -->
                                 <p>
-                                    PHP中文网讲师,欢迎选择我的课程，让我们一起见证您的进步~~
+                                    {{listData.userSign?listData.userSign: '空空如也，他什么也没说！！！'}}
                                 </p>
                             </div>
                         </div>
@@ -243,8 +242,37 @@
 import Navbar from '@/components/home/Navbar.vue'
 import Footerbar from '@/components/home/Footerbar.vue'
 
+import {getVdetail} from '@/axios/index.js'
+
 export default {
     name: 'vdetail',
+    data(){
+        return {
+            listData: {},
+            commitData: [],
+            videoData: []
+        }
+    },
+    created(){
+        const {listId} = this.$route.params
+        // 发送请求
+        getVdetail({listId}).then(res =>{
+            const {code, detailData} = res.data
+            // 获取失败 应该跳转 404
+            if(code === 500) return console.log('获取失败')
+
+            this.listData = detailData[0][0]
+            this.videoData = detailData[1]
+            this.commitData = detailData[2]
+
+            console.log(this.listData)
+            console.log(this.videoData)
+            console.log(this.commitData)
+
+
+
+        })
+    },
     components:{
         // 头部
         Navbar,
@@ -285,9 +313,11 @@ export default {
                         margin: 20px 0;
                         font-size: 15px;
                         line-height: 26px;
+                        min-height: 80px;
                     }
                     .video-attribute{
                         color: #6f6f6f;
+                        font-size: 16px;
                         margin-bottom: 20px;
                     }
                     .video-btn{

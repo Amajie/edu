@@ -3,24 +3,27 @@
         <div class="my-video-content">
             <div class="video-list">
                 <ul class="list-wrap">
-                    <li>
-                        <h2 class="title">仿腾讯视频电视剧首页</h2>
+                    <li
+                        v-for="(item, index) in courseData"
+                        :key="item.listId"
+                    >
+                        <h2 class="title">{{item.listTitle}}</h2>
                         <div class="content">
                             <div class="poster">
-                                <img src="../imgs/test.png">
+                                <img :src="item.listPoster">
                             </div>
                             <div class="info">
                                 <div class="desc">
                                     简介：
                                     <span>
-                                        php中文网-朱老师( Peter Zhu)
+                                        {{item.listDesc? item.listDesc: '暂无简介'}}
                                     </span>
                                 </div>
                                 <div class="other">
-                                    <span>中级</span>
-                                    <span>点击量：1233</span>
-                                    <span>时间：2020-02-21</span>
-                                    <span>评论：1233</span>
+                                    <span>{{item.listGrade | grade}}</span>
+                                    <span>点击量：{{item.listClick}} 次</span>
+                                    <span>时间：{{item.listTime | dateTime}}</span>
+                                    <span>评论：{{item.listCommit}} 条</span>
                                 </div>
                             </div>
                         </div>
@@ -31,68 +34,101 @@
                                     <Icon type="ios-arrow-down"></Icon>
                                 </Button>
                                 <DropdownMenu slot="list">
-                                    <DropdownItem>再次编辑</DropdownItem>
-                                    <DropdownItem>我要发布</DropdownItem>
-                                    <DropdownItem>编辑简介</DropdownItem>
-                                    <DropdownItem>我要收藏</DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                        </div>
-                    </li>
-                    <li>
-                        <h2 class="title">仿腾讯视频电视剧首页</h2>
-                        <div class="content">
-                            <div class="poster">
-                                <img src="../imgs/test.png">
-                            </div>
-                            <div class="info">
-                                <div class="desc">
-                                    简介：
-                                    <span>
-                                        php中文网-朱老师( Peter Zhu) 时间：2019.10.17 晚 
-                                        20:00-22:00 主题：如何高效的学习一门新技术？ 具体内容：
-                                        1. 2020了, 还有哪些值得学习的新技术? 2.如何高效的学习前端开发? 
-                                        3.如果高效的学习PHP开发?
-                                    </span>
-                                </div>
-                                <div class="other">
-                                    <span>中级</span>
-                                    <span>点击量：1233</span>
-                                    <span>时间：2020-02-21</span>
-                                    <span>评论：1233</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="op">
-                            <Dropdown>
-                               <Button >
-                                    操作
-                                    <Icon type="ios-arrow-down"></Icon>
-                                </Button>
-                                <DropdownMenu slot="list">
-                                    <DropdownItem>编辑</DropdownItem>
-                                    <DropdownItem>发布</DropdownItem>
-                                    <DropdownItem>收藏</DropdownItem>
+                                    <DropdownItem>视频详情</DropdownItem>
+                                    <DropdownItem @click.native="showModal(item, index)">我要发布</DropdownItem>
                                 </DropdownMenu>
                             </Dropdown>
                         </div>
                     </li>
                 </ul>
             </div>
-            <div class="page">
-                <Page :current="2" :total="500" simple />
+            <div v-if="courseTotal" class="page">
+                <Page :current="1" :total="courseTotal*10" simple />
             </div>
         </div>
+        <!-- 简介框 -->
+        <Modal 
+            v-model="descModal"
+            :transfer="false"
+            :closable="false"
+            :mask-closable="false"
+            width="350"
+        >
+            <p slot="header" style="color:#f60;text-align:center">
+                <span>编写简介</span>
+            </p>
+            <div style="text-align:center">
+                <div class="edit-desc">
+                    <textarea v-model="listDesc" placeholder="请输入相关简介" ></textarea>
+                </div>
+            </div>
+            <div slot="footer">
+                <Button @click.native="handleclose">取消</Button>
+                <Button @click.native="handleSubmit" :loading="loading" type="error">发布</Button>
+            </div>
+        </Modal>
     </div>
 </template>
 
 <script>
+import {getCourse, upTitle} from '@/axios/index'
 export default {
     data(){
-        return {}
+        return {
+            courseData: [],
+            courseTotal: 0,
+            descModal: false,
+            loading: false,
+            listDesc: '',
+            listId: '', // 编辑简介视频集 id
+            listIndex: '' // 编辑简介视频集 索引
+        }
     },
     created(){
-        console.log(111)
+        getCourse({
+            courseId: 1
+        }).then(res =>{
+            const {code, courseData, courseTotal} = res.data
+            if(code === 200){
+                this.courseData = courseData
+                this.courseTotal = courseTotal
+            }
+        })
+    },
+    methods:{
+        handleclose(){
+            this.descModal = false
+            this.listDesc = ''
+        },
+        // 发布视频
+        handleSubmit(){
+            const {courseData, listDesc, listIndex, courseTotal, $Message, listId} = this
+            // 内容为空
+            if(!listDesc) return $Message.warning('请输入相关简介')
+
+            upTitle({
+                listId, listDesc, updateId: 1
+            }).then(res =>{
+
+                const {code} = res.data
+
+                if(code === 500) return $Message.success('发布成功')
+
+                this.listDesc = ''
+                this.courseData.splice(listIndex, 1)
+                this.courseTotal = courseTotal - 1
+
+                $Message.success('发布成功')
+
+            })
+        },
+
+        // 显示 简介 对话框
+        showModal({listId}, listIndex){
+            this.listId = listId
+            this.listIndex = listIndex
+            this.descModal = true
+        }
     }
 }
 </script>
@@ -158,6 +194,19 @@ export default {
                 transform: translateX(-50%);
                 display: inline-block;
             }
+        }
+    }
+    .edit-desc{
+        height: 100px;
+        padding: 5px;
+        border: 1px dashed #ccc;
+        textarea{
+            width: 100%;
+            height: 100%;
+            color: #555;
+            border: none;
+            outline: none;
+            resize: none;
         }
     }
 }

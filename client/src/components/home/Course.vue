@@ -4,22 +4,17 @@
             <h1>最新课程</h1>
             <div class="course-list">
                 <ul>
-                    <li>
+                    <li 
+                        v-for="(item, index) in courseData"
+                        :key="index"
+                        @click="$router.replace(`/vdetail/${item.listId}`)"
+                    >
                         <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
+                            <img :src="item.listPoster">
                         </div>
                         <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
+                            <span class="grade">{{item.listGrade | grade}}</span>
+                            <span class="title">{{item.listTitle}}</span>
                         </div>
                     </li>
                     <li>
@@ -101,7 +96,14 @@
 </template>
 <script>
 export default {
-    name: 'course'
+    name: 'course',
+    created(){
+        console.log(this.courseData)
+    },
+
+    props:{
+        courseData: Array
+    }
     
 }
 </script>

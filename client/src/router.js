@@ -16,7 +16,7 @@ export default new Router({
             component: () => import('@/views/Teaching.vue')
         },
         {
-            path: '/vdetail',
+            path: '/vdetail/:listId',
             name: 'videoDetail',
             component: () => import('@/views/VideoDetail.vue')
         },

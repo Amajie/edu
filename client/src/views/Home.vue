@@ -3,7 +3,7 @@
         <Navbar></Navbar>
         <div class="home-main">
             <Carousel></Carousel>
-            <Course></Course>
+            <Course :courseData="courseData"></Course>
             <Technology></Technology>
             <Videos></Videos>
         </div>
@@ -19,10 +19,23 @@ import Technology from '@/components/home/Technology.vue'
 import Videos from '@/components/home/Videos.vue'
 import Footerbar from '@/components/home/Footerbar.vue'
 
+// 请求数据
+import {getHome} from '@/axios/index.js'
+
 export default {
     name: 'home',
+    data(){
+        return {
+            courseData: []
+        }
+    },
     created(){
-        console.log(this.$store.state.users)
+        getHome().then(res =>{
+            const {code, homeData} = res.data
+            if(code === 500) return console.log('暂无数据')
+            console.log(homeData)
+            this.courseData = homeData[0]
+        })
     },
     components:{
         // 头部

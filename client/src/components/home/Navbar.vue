@@ -8,10 +8,9 @@
             <!-- 导航栏 -->
             <div class="nav">
                 <ul>
-                    <li><span>首页</span></li>
-                    <li><span>视频教程</span></li>
+                    <li @click="handleNav('/')"><span>首页</span></li>
+                    <li @click="handleNav('/teach')"><span>视频教程</span></li>
                     <li><span>社区问答</span></li>
-                    <li><span>创建社区</span></li>
                 </ul>
             </div>
             <!-- 账号状态 -->
@@ -30,7 +29,11 @@
 
 export default {
     name: 'navbar',
-    
+    methods:{
+        handleNav(url){
+            this.$router.replace(url)
+        }
+    }
 }
 </script>
 

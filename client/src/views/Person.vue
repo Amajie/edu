@@ -79,10 +79,10 @@ export default {
         return {
             navList: [
                 {title: '个人信息', icon: '&#xe7bb;', component: User},
-                {title: '我的课程', icon: '&#xe613;', component: MyCourse},
-                {title: '我的社区', icon: '&#xe61f;', component: User},
+                {title: '课程中心', icon: '&#xe613;', component: MyCourse},
+                {title: '社区中心', icon: '&#xe61f;', component: User},
                 {title: '创建社区', icon: '&#xe61f;', component: User},
-                {title: '我的粉丝', icon: '&#xe61f;', component: User},
+                {title: '关注粉丝', icon: '&#xe61f;', component: User},
             ],
             activeIndex: 0,
             childComponent: User

@@ -117,8 +117,8 @@
                 <div title="关闭" @click="titleFlag = false" class="close">
                     <Icon size="30" type="md-close" />
                 </div>
-                <ul v-if="listData.length">
-                    <li v-for="(item, index) in listData" :key="index"
+                <ul v-if="courseData.length">
+                    <li v-for="(item, index) in courseData" :key="index"
                         @click="setselectTitle(item)"
                     >{{item.listTitle}}</li>
                 </ul>
@@ -141,7 +141,7 @@
 
 <script>
 
-import {setTitle, getTitle, uploadVideoCut, insertVideo} from '@/axios/index'
+import {setTitle, getCourse, insertVideo} from '@/axios/index'
 import axios from 'axios'
 export default {
     data(){
@@ -158,7 +158,7 @@ export default {
             videoTitle:'',
             titleFlag: false,
             titleLoading: false,
-            listData: [],
+            courseData: [],
             // 每个切片的长度
             cutSize:  1000000*200, // 200m 一个切片
             cutNum: 5, // 最多切片的个数
@@ -169,8 +169,8 @@ export default {
         }
     },
     created(){
-        getTitle().then(res =>{
-            this.listData = res.data.listData
+        getCourse().then(res =>{
+            this.courseData = res.data.courseData
         })
     },
     methods:{
@@ -284,7 +284,7 @@ export default {
 
         // 初始化数据
         clearData(){
-            Object.assign(this.$data, this.$options.data(), {listData: this.listData})
+            Object.assign(this.$data, this.$options.data(), {courseData: this.courseData})
         },
 
         // 创建视频集合
@@ -318,7 +318,7 @@ export default {
                 
                 // 关闭 modal
                 this.handleclose()
-                this.listData.unshift(title)
+                this.courseData.unshift(title)
                 $Message.success('创建成功')
 
             })
@@ -346,11 +346,11 @@ export default {
         getTitle(){
              getTitle().then(res =>{
 
-                const listData = res.data.listData
+                const courseData = res.data.courseData
 
-                if(!listData.length) return this.$Message.warning('还是没数据呢')
+                if(!courseData.length) return this.$Message.warning('还是没数据呢')
                 // 否则设置数据
-                this.listData = listData
+                this.courseData = courseData
 
                 this.$Message.success('还真有数据，刚刚应该是迷路了')
 

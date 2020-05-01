@@ -8,16 +8,15 @@ export const register = data => ajax({url: '/register', data, method: 'post'})
 export const updateUser = data => ajax({url: '/update_user', data, method: 'post'})
 // 创建视频集
 export const setTitle = data => ajax({url: '/set_title', data, method: 'post'})
-// 获取视频集
-export const getTitle = data => ajax({url: '/get_title', data, method: 'post'})
-// 上传视频切片
-export const uploadVideoCut = data => ajax({
-    url: '/upload_video_cut', 
-    data, 
-    method: 'post',
-    headers:{
-        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary6g0D5xxay11G6igl'
-    }
-})
+// 更新 视频集
+export const upTitle = data => ajax({url: '/up_title', data, method: 'post'})
 // 提交视频数据
 export const insertVideo = data => ajax({url: '/insert_video', data, method: 'post'})
+// 获取 首页数据
+export const getHome = params => ajax({url: '/get_home', params})
+// 获取 视频详情数据
+export const getVdetail = params => ajax({url: '/get_vdetail', params})
+// 获取视频数据
+export const getCourse = params => ajax({url: '/get_course', params})
+
+

@@ -28,6 +28,28 @@ Vue.prototype.$Modal = Modal
 
 Vue.config.productionTip = false
 
+// 获取 等级
+Vue.filter('grade', (grade) =>{
+  switch(grade){
+    case 2:
+      return '中级'
+    case 3:
+      return '高级'
+    default:
+      return '初级'
+  }
+})
+
+Vue.filter('dateTime', (dateTime, flag) =>{
+
+  dateTime = new Date(dateTime)
+
+  const time = `${dateTime.getFullYear()}-${('0'+(1+dateTime.getMonth())).slice(-2)}-${('0'+dateTime.getDate()).slice(-2)}`
+  // flag 存在 说明需要 带 小时分 否则不需要
+  return !flag? time: `${time} ${('0'+dateTime.getHours()).slice(-2)}: ${('0'+dateTime.getMinutes()).slice(-2)}`
+})
+
+
 new Vue({
   router,
   store,
