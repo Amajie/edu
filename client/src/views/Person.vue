@@ -78,11 +78,11 @@ export default {
     data(){
         return {
             navList: [
-                {title: '个人信息', icon: '&#xe7bb;', component: User},
-                {title: '课程中心', icon: '&#xe613;', component: MyCourse},
-                {title: '社区中心', icon: '&#xe61f;', component: User},
-                {title: '创建社区', icon: '&#xe61f;', component: User},
-                {title: '关注粉丝', icon: '&#xe61f;', component: User},
+                {title: '个人信息', icon: '&#xeb99;', component: User},
+                {title: '课程中心', icon: '&#xeb99;', component: MyCourse},
+                {title: '社区中心', icon: '&#xeb99;', component: User},
+                {title: '创建社区', icon: '&#xeb99;', component: User},
+                {title: '关注粉丝', icon: '&#xeb99;', component: User},
             ],
             activeIndex: 0,
             childComponent: User

@@ -1,30 +1,51 @@
 {
-  "id": "",
-  "name": "",
+  "id": "1808966",
+  "name": "edu",
   "font_family": "iconfont",
   "css_prefix_text": "icon-",
   "description": "",
   "glyphs": [
     {
-      "icon_id": "1447723",
-      "name": "课程",
-      "font_class": "kecheng",
-      "unicode": "e613",
-      "unicode_decimal": 58899
+      "icon_id": "1306459",
+      "name": "播放",
+      "font_class": "bofang",
+      "unicode": "e611",
+      "unicode_decimal": 58897
     },
     {
-      "icon_id": "9709602",
-      "name": "设置",
-      "font_class": "shezhi",
-      "unicode": "e7bb",
-      "unicode_decimal": 59323
+      "icon_id": "5387948",
+      "name": "全屏_o",
+      "font_class": "quanping_o",
+      "unicode": "eb99",
+      "unicode_decimal": 60313
     },
     {
-      "icon_id": "13079699",
-      "name": "全棉社区",
-      "font_class": "quanmianshequ",
-      "unicode": "e61f",
-      "unicode_decimal": 58911
+      "icon_id": "6956934",
+      "name": "播放",
+      "font_class": "bofang1",
+      "unicode": "e63a",
+      "unicode_decimal": 58938
+    },
+    {
+      "icon_id": "8288866",
+      "name": "声音",
+      "font_class": "shengyin",
+      "unicode": "e852",
+      "unicode_decimal": 59474
+    },
+    {
+      "icon_id": "8955984",
+      "name": "小屏2",
+      "font_class": "small-screen2",
+      "unicode": "e6fe",
+      "unicode_decimal": 59134
+    },
+    {
+      "icon_id": "759622",
+      "name": "车辆",
+      "font_class": "cheliang",
+      "unicode": "e62b",
+      "unicode_decimal": 58923
     }
   ]
 }

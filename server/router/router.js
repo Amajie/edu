@@ -248,6 +248,9 @@ router.get('/get_course', (req, res) =>{
 function getCourseSql(courseId, userId){
     let insrt1 = ''
     let insrt2 = ''
+
+    console.log(userId)
+
     switch(courseId){
         // 获取已经发布的
         case '1':

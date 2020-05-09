@@ -34,6 +34,11 @@ export default new Router({
             path: '/login',
             name: 'Login',
             component: () => import('@/views/Login.vue')
+        },
+        {
+            path: '/play',
+            name: 'play',
+            component: () => import('@/views/Play.vue')
         }
     ]
 })
