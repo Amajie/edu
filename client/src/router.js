@@ -36,7 +36,7 @@ export default new Router({
             component: () => import('@/views/Login.vue')
         },
         {
-            path: '/play',
+            path: '/play/:listId/:videoIndex',
             name: 'play',
             component: () => import('@/views/Play.vue')
         }

@@ -2,55 +2,34 @@
     <div class="play">
         <div class="play-content">
             <!-- 导航栏 -->
-            <div class="video-nav"></div>
-            <!-- 视频播放内容 -->
-            <div class="video-wrap">
-               
-                <!-- 课程信息 -->
-                <div class="back-list">
-                    <p>
-                        <i class="icon iconfont">&#xeb99;</i>
-                        <span>返回课程详情</span>
-                    </p>
-                </div>
-                <div class="video-info">
-                    <p>
-                        <span>课时</span>
-                        <i>1</i>
-                    </p>
-                </div>
-                <div class="video-play">
-                    <div class="video-url">
-                        <video src="/soqhusclecw0000000/merge/1588321821478测试.mp4"></video>
+            <div class="video-nav">
+                <div class="commit">
+                    <div class="rate">
+                        <Rate allow-half icon="ios-heart" v-model="commitRate" />
                     </div>
-                    <div class="video-op">
-                        <div class="progress">
-                           <div></div>
-                        </div>
-                        <div class="op">
-                            <div class="play-btn-time">
-                                <i title="播放" class="icon iconfont">&#xe611;</i>
-                                <!-- <i title="暂停" class="icon iconfont">&#xe63a;</i> -->
-                                <i class="t">00:21</i>
-                                <i class="t">/</i>
-                                <i class="t">11:20</i>
-                            </div>
-                            <div class="play-vioce-form">
-                                <div class="vioce">
-                                    <i title="声音" class="icon iconfont">&#xe852;</i>
-                                </div>
-                                <div class="speed">
-                                    <i title="倍率" class="t icon">1x</i>
-                                </div>
-                                <div class="form">
-                                    <i title="全屏" class="icon iconfont">&#xeb99;</i>
-                                    <!-- <i title="缩小" class="icon iconfont">&#xe6fe;</i> -->
-                                </div>
-                            </div>
-                        </div>
+                    <div>
+                        <textarea v-model="commitContent" placeholder="对课程的评价"></textarea>
                     </div>
+                    
+                    <Button @click.native="handleCommit" long>提交</Button>
+                </div>
+                <div class="nav">
+                    <ul>
+                        <li :class="{active: index === videoIndex}"
+                            :title="video.videoTitle"
+                            v-for="(video, index) in videoData"
+                            :key="video.videoId"
+                            @click="handlePlay(video, index)"
+                        >
+                            <em>{{index + 1}}</em>
+                            <span>{{video.videoTitle}}</span>
+                            <!-- <i class="icon iconfont">{{index === videoIndex?'&#xe63a;' :'&#xe611;'}}</i> -->
+                        </li>
+                    </ul>
                 </div>
             </div>
+            <!-- 视频播放内容 -->
+            <VideoShow ref="videoShow"></VideoShow>
         </div>
     </div>
 </template>
@@ -58,17 +37,107 @@
 
 import Navbar from '@/components/home/Navbar.vue'
 import Footerbar from '@/components/home/Footerbar.vue'
+import VideoShow from '@/components/play/VideoShow.vue'
+
+import {getVdetail, insertVideoCommit} from '@/axios/index.js'
 
 export default {
     name: 'play',
     data(){
-        return {}
+        return {
+            videoData: [],
+            listData: {},
+            videoIndex: 0,
+            commitContent: '',
+            commitRate: 0
+        }
     },
+    created(){
+
+        this.listId = this.$route.params.listId
+        // 此时
+        this.videoIndex = parseInt(this.$route.params.videoIndex) - 1
+
+        // 发送请求
+        getVdetail({listId: this.listId}).then(res =>{
+            const {code, detailData} = res.data
+            // 获取失败 应该跳转 404
+            if(code === 500) return console.log('获取失败')
+
+            this.listData = detailData[0][0]
+            this.videoData = detailData[1]
+
+            // 为当前 视频 添加属性
+            this.currentVideo = this.videoData[this.videoIndex]
+            this.currentVideo.userId = this.listData.userId
+            this.currentVideo.videoIndex = this.videoIndex
+            
+            this.$refs.videoShow.initData(this.currentVideo)
+        })
+    },
+
+    methods:{
+        // 点击列表播放
+        handlePlay(video, index){
+
+            const {videoIndex, listData, listId, $router} = this
+
+            if(index === videoIndex) return console.log('点击同一项')
+
+            this.videoIndex = index
+
+            this.currentVideo = {...video, userId: listData.userId, videoIndex: index}
+
+            this.$refs.videoShow.initData(this.currentVideo, true)
+
+            $router.push(`/play/${listId}/${index+1}`)
+
+        },
+        // 发表评论
+        handleCommit(){
+            const {commitContent, commitRate, $Message, videoIndex, listId} = this
+
+            if(!commitContent) return $Message.info('请输入评论内容')
+            if(!commitRate) return $Message.info('请选择评分哟')
+
+            // 发送请求
+            insertVideoCommit({
+                commitContent, 
+                commitRate,
+                commitVideo: videoIndex + 1, 
+                commitListId: listId
+            }).then(res =>{
+
+                if(res.data.code === 500) return $Message.error('提交失败，请稍后再试')
+                
+                $Message.success('感谢您的评论')
+
+                this.commitContent = ''
+                this.commitRate = 0
+
+
+            })
+
+        }
+    },
+
+    // watch:{
+    //     videoIndex: {
+    //         handler(newIndex, oldIndex) {
+    //             console.log(newIndex)
+    //         },
+    //         // 代表在wacth里声明了firstName这个方法之后立即先去执行handler方法
+    //         immediate: false
+    //     }
+    // },
+
     components:{
         // 头部
         Navbar,
         // 底部
-        Footerbar
+        Footerbar,
+        // 视频播放
+        VideoShow
     }
 }
 </script>
@@ -81,127 +150,68 @@ export default {
         width: 1200px;
         height: 100%;
         margin: 0 auto;
-        .video-wrap{
-            height: 100%;
-            margin-right: 270px;
-            .back-list{
-                
-                overflow: hidden;
-                p{
-                    float: left;
-                    padding: 3px 10px;
-                    margin-top: 10px;
-                    cursor: pointer;
-                    background-color: #aaacaf;
-                    &:hover{
-                        background-color: #b5b7b9;
-                    }
-                    span{
-                        margin-left: 5px;
-                    }
-                }
-            }
-            .video-info{
-                margin-top: 20px;
-                p{
-                    position: relative;
-                    span{
-                        background-color: #aaacaf;
-                        padding: 3px 20px;
-                        border-radius: 10px;
-                    }
-                    i{
-                        position: absolute;
-                        left: 50px;
-                        top: -2px;
-                        font-style: normal;
-                        display: block;
-                        width: 25px;
-                        height: 25px;
-                        line-height: 25px;
-                        text-align: center;
-                        border-radius: 50%;
-                        background-color: #21a557;
-                    }
-                }
-            }
-            .video-play{
-                position: relative;
-                height: calc(100% - 110px);
-                margin-top: 20px;
-                background: #000;
-                // 视频内容去
-                .video-url{
-                    height: 100%;
-                    video{
-                        width: 100%;
-                        height: 100%;
-                        outline: none;
-                    }
-                }
-                // 视频操作
-                .video-op{
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    width: 100%;
-                    background-color: #000;
-                    .progress{
-                        height: 5px;
-                        cursor: pointer;
-                        background-color: #555555;
-                        > div{
-                            width: 50%;
-                            height: 100%;
-                            background-color: #2aa126;
-                        }
-                    }
-                    .op{
-                        overflow: hidden;
-                        padding: 0 10px;
-                        height: 45px;
-                        line-height: 45px;
-                        // 暂停 时间
-                        .play-btn-time{
-                            float: left;
-                            i{
-                                font-style: normal;
-                                font-size: 25px;
-                                margin: 0 5px;
-                                &.t{
-                                    font-size: 20px;
-                                }
-                            }
-                        }
-                        // 声音全屏速度
-                        .play-vioce-form{
-                            float: right;
-                            > div{
-                                float: left;
-                                margin: 0 10px;
-                                i{
-                                    font-style: normal;
-                                    font-size: 25px;
-                                    &.t{
-                                        font-size: 20px;
-                                    }
-                                }
-                            }
-                        }
-
-                        // 所有的图标 手形状
-                        .icon{
-                            cursor: pointer;
-                        }
-                    }
-                }
-            }
-        }
         .video-nav{
             float: right;
             width: 250px;
             height: 100%;
             background-color: #f5f7fa;
+            .commit{
+                padding: 5px;
+                > div{
+                    textarea{
+                        width: 100%;
+                        height: 70px;
+                        outline: none;
+                        resize: none;
+                        padding: 5px;
+                        border-radius: 5px;
+                        background-color: #f5f7fa;
+                        border: 1px solid #ccc;
+                    }
+                }
+            }
+            .nav{
+                height: calc(100% - 150px);
+                overflow: hidden;
+                overflow-y: auto;
+                ul{
+                    padding: 0 5px;
+                    font-size: 18px;
+                    li{
+                        cursor: pointer;
+                        margin: 10px 0;
+                        &:hover span{
+                            color: #2d8cf0;
+                        }
+                        em{
+                            font-style: normal;
+                            display: block;
+                            float: left;
+                            width: 25px;
+                            height: 25px;
+                            color: #fff;
+                            text-align: center;
+                            border-radius: 50%;
+                            background-color: #21a557;
+                        }
+                        span{
+                            margin: 0 3px;
+                        }
+
+                        i{
+                            float: right;
+                        }
+                    }
+                    .active{
+                        em{
+                            background-color: #ed4014;
+                        }
+                        span{
+                            color: #e96900;
+                        }
+                    }
+                }
+            }
         }
     }
 }

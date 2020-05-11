@@ -98,6 +98,7 @@ router.post('/upload_video_cut', (req, res) =>{
         fs.appendFileSync(`${writeDir}/${filename}`, fs.readFileSync(chunk.path))
         // 删除文件
         fs.unlinkSync(chunk.path)
+        console.log(chunk.path)
         // 成功
         res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
 
@@ -177,6 +178,30 @@ router.post('/set_title', (req, res) =>{
     })    
 })
 
+// 对视频进行评论
+router.post('/insert_video_commit', jwt, (req, res) =>{
+    
+    const {commitListId, commitRate, commitVideo, commitContent} = req.body
+
+    const commitUserId = req.session.userId
+
+
+
+    // 插入数据
+    const insert = `insert into listcommits(commitId, commitListId, commitUserId, commitContent, commitRate, commitVideo, commitTime) 
+                    values('${getId()}','${commitListId}', '${commitUserId}', '${commitContent}', '${commitRate}', '${commitVideo}', '${Date.now()}')`
+
+    execTrans([getSql(insert, '')], err =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+
+        res.json({"msg": "操作成功", "code":200})
+    })
+
+
+
+})
+
 
 // 首页获取数据
 router.get('/get_home', (req, res) =>{
@@ -194,17 +219,26 @@ router.get('/get_home', (req, res) =>{
 
 // 获取 视频 详情数据
 router.get('/get_vdetail', (req, res) =>{
-    const {listId} = req.query
+    const {listId, commit} = req.query
 
     // 获取最新的数据
     let listDetail = `select listTitle, listClick, listDesc, listPoster, listGrade, listTime,
                     userId, userEmail, userName from lists  left join users on lists.listUserId = users.userId  WHERE listId='${listId}';`
     // 视频
     let videoDetail = `select * from videos where videoListId='${listId}';`
-    // 评论
-    let commitDetail = `select * from listCommits where commitListId='${listId}';`
 
-    execTrans([getSql(listDetail, ''), getSql(videoDetail, ''), getSql(commitDetail, '')], (err, detailData) =>{
+    let sqlArr = [getSql(listDetail, ''), getSql(videoDetail, '')]
+
+    if(commit){
+        // 评论 前三条数据即可
+        let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
+                    commitTime, commitUserId, commitVideo, userId, userName from listCommits left 
+                    join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit 3;`
+        sqlArr.push(getSql(commitDetail, ''))
+    }
+
+
+    execTrans(sqlArr, (err, detailData) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, detailData: []})
 

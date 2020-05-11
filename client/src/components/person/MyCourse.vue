@@ -20,7 +20,7 @@ import UploadVideo  from './course/UploadVidei.vue'
 import MyVideo  from './course/MyVideo.vue'
 
 export default {
-    name: 'fdgfdg',
+    name: 'myCourse',
     data(){
         return {
             childComponent: MyVideo,

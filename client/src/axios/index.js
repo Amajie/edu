@@ -18,5 +18,7 @@ export const getHome = params => ajax({url: '/get_home', params})
 export const getVdetail = params => ajax({url: '/get_vdetail', params})
 // 获取视频数据
 export const getCourse = params => ajax({url: '/get_course', params})
+// 发表评论
+export const insertVideoCommit = data => ajax({url: '/insert_video_commit', data, method: 'post'})
 
 

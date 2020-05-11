@@ -19,7 +19,7 @@
                             {{listData.listGrade | grade}} | 共{{videoData.length}}章节 | {{listData.listClick}}次点击量 | 添加时间：{{listData.listTime | dateTime(true)}}
                         </div>
                         <div class="video-btn">
-                            <span class="study">开始学习</span>
+                            <span @click="toPlay(0)" class="study">开始学习</span>
                             <span class="download">课件下载</span>
                             <span class="collect">收藏视频</span>
                             <span class="tel">联系老师</span>
@@ -53,182 +53,65 @@
                         <!-- 评论信息 -->
                         <div class="commit">
                             <ul>
-                                <li>
+                                <li
+                                    v-for="commit in commitData"
+                                    :key="commit.commitId"
+                                >
                                     <div class="commit-user">
                                         <div class="pic">
                                             <img src="./imgs/detail.jpg">
                                         </div>  
                                         <div class="info">
                                             <div class="name">
-                                                <span>车神-黄杰</span>
+                                                <span>{{commit.userName}}</span>
                                                 <p>
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
+                                                    <Rate disabled allow-half icon="ios-heart" v-model="commit.commitRate" />
                                                 </p>
                                             </div>
                                             <div class="study-time">
-                                                <span>学习了97个课时评价</span>
+                                                <span>学习了{{commit.commitVideo}}个课时评价</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="commit-content">
                                         <span>
-                                            课程听了过半~感觉这种教授方式还是挺不错的~必修课基础讲的比较多，
-                                            期待实战的课程。
+                                            {{commit.commitContent}}
                                         </span>
                                     </div>
                                     <div class="commit-time">
-                                        <span>2019-12-6</span>
+                                        <span>{{commit.commitTime | dateTime}}</span>
                                     </div>
-                                    <div class="reply-commit">
+                                    <!-- <div class="reply-commit">
                                         <p class="reply">
                                             <span>作者回复：</span>感谢支持
                                         </p>
                                         <p class="time">
                                             2019-11-02
                                         </p>
-                                    </div>
+                                    </div> -->
                                 </li>
-                                <li>
-                                    <div class="commit-user">
-                                        <div class="pic">
-                                            <img src="./imgs/detail.jpg">
-                                        </div>  
-                                        <div class="info">
-                                            <div class="name">
-                                                <span>车神-黄杰</span>
-                                                <p>
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                </p>
-                                            </div>
-                                            <div class="study-time">
-                                                <span>学习了97个课时评价</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="commit-content">
-                                        <span>
-                                            课程听了过半~感觉这种教授方式还是挺不错的~必修课基础讲的比较多，
-                                            期待实战的课程。
-                                        </span>
-                                    </div>
-                                    <div class="commit-time">
-                                        <span>2019-12-6</span>
-                                    </div>
-                                    <div class="reply-commit">
-                                        <p class="reply">
-                                            <span>作者回复：</span>感谢支持
-                                        </p>
-                                        <p class="time">
-                                            2019-11-02
-                                        </p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="commit-user">
-                                        <div class="pic">
-                                            <img src="./imgs/detail.jpg">
-                                        </div>  
-                                        <div class="info">
-                                            <div class="name">
-                                                <span>车神-黄杰</span>
-                                                <p>
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                </p>
-                                            </div>
-                                            <div class="study-time">
-                                                <span>学习了97个课时评价</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="commit-content">
-                                        <span>
-                                            课程听了过半~感觉这种教授方式还是挺不错的~必修课基础讲的比较多，
-                                            期待实战的课程。
-                                        </span>
-                                    </div>
-                                    <div class="commit-time">
-                                        <span>2019-12-6</span>
-                                    </div>
-                                    <div class="reply-commit">
-                                        <p class="reply">
-                                            <span>作者回复：</span>感谢支持
-                                        </p>
-                                        <p class="time">
-                                            2019-11-02
-                                        </p>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="commit-user">
-                                        <div class="pic">
-                                            <img src="./imgs/detail.jpg">
-                                        </div>  
-                                        <div class="info">
-                                            <div class="name">
-                                                <span>车神-黄杰</span>
-                                                <p>
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                    <img src="./imgs/s.png">
-                                                </p>
-                                            </div>
-                                            <div class="study-time">
-                                                <span>学习了97个课时评价</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="commit-content">
-                                        <span>
-                                            课程听了过半~感觉这种教授方式还是挺不错的~必修课基础讲的比较多，
-                                            期待实战的课程。
-                                        </span>
-                                    </div>
-                                    <div class="commit-time">
-                                        <span>2019-12-6</span>
-                                    </div>
-                                    <div class="reply-commit">
-                                        <p class="reply">
-                                            <span>作者回复：</span>感谢支持
-                                        </p>
-                                        <p class="time">
-                                            2019-11-02
-                                        </p>
-                                    </div>
-                                </li>
+                               
                             </ul>
-                            <div class="more-commit">
+                            <div v-if="commitData.length >= 3" class="more-commit">
                                 <span>查看更多...</span>
                             </div>
                         </div>
                     </div>
                     <!-- 课程介绍 -->
                     <div class="section">
-                        <h1>课程介绍</h1>
+                        <h1>课程目录</h1>
                         <ul>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
-                            <li>第1章 ThinkPHP安装与运行流程</li>
+                            <li
+                                :title="video.videoTitle"
+                                v-for="(video, index) in videoData"
+                                :key="video.videoId"
+                                @click="toPlay(index)"
+                            >
+                                <em>{{index + 1}}</em>
+                                <span>{{video.videoTitle}}</span>
+                                <i class="icon iconfont">&#xe611;</i>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -254,9 +137,9 @@ export default {
         }
     },
     created(){
-        const {listId} = this.$route.params
+        this.listId = this.$route.params.listId
         // 发送请求
-        getVdetail({listId}).then(res =>{
+        getVdetail({listId: this.listId, commit: true}).then(res =>{
             const {code, detailData} = res.data
             // 获取失败 应该跳转 404
             if(code === 500) return console.log('获取失败')
@@ -265,13 +148,13 @@ export default {
             this.videoData = detailData[1]
             this.commitData = detailData[2]
 
-            console.log(this.listData)
-            console.log(this.videoData)
             console.log(this.commitData)
-
-
-
         })
+    },
+    methods:{
+        toPlay(index){
+            this.$router.push(`/play/${this.listId}/${index + 1 }`)
+        }
     },
     components:{
         // 头部
@@ -355,6 +238,35 @@ export default {
                     margin-right: 400px;
                     background: #fff;
                     border-radius: 10px;
+                    ul{
+                        padding: 0 5px;
+                        font-size: 18px;
+                        li{
+                            cursor: pointer;
+                            margin: 10px 0;
+                            &:hover span{
+                                color: #2d8cf0;
+                            }
+                            em{
+                                font-style: normal;
+                                display: block;
+                                float: left;
+                                width: 25px;
+                                height: 25px;
+                                color: #fff;
+                                text-align: center;
+                                border-radius: 50%;
+                                background-color: #21a557;
+                            }
+                            span{
+                                margin: 0 3px;
+                            }
+
+                            i{
+                                float: right;
+                            }
+                        }
+                    }
                 }
                 .user-commit{
                     float: right;
@@ -438,11 +350,11 @@ export default {
                                             // 评分
                                             p{
                                                 float: right;
-                                                img{
-                                                    width: 20px;
-                                                    height: 20px;
-                                                    margin: 0 2px;
-                                                }
+                                                // img{
+                                                //     width: 20px;
+                                                //     height: 20px;
+                                                //     margin: 0 2px;
+                                                // }
                                             }
                                         }
                                         .study-time{
