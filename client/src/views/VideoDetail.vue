@@ -100,7 +100,7 @@
                     </div>
                     <!-- 课程介绍 -->
                     <div class="section">
-                        <h1>课程目录</h1>
+                        <h1>课程目录 ({{listData.listType+' / '+ listData.listDirection}})</h1>
                         <ul>
                             <li
                                 :title="video.videoTitle"
@@ -147,8 +147,6 @@ export default {
             this.listData = detailData[0][0]
             this.videoData = detailData[1]
             this.commitData = detailData[2]
-
-            console.log(this.commitData)
         })
     },
     methods:{

@@ -158,6 +158,8 @@ router.post('/set_title', (req, res) =>{
         
         // 获取 切片相关信息
         let [listPoster] = files.listPoster
+        let [listType] = fields.listType
+        let [listDirection] = fields.listDirection
         let [listTitle] = fields.listTitle
         let [listGrade] = fields.listGrade
 
@@ -166,8 +168,8 @@ router.post('/set_title', (req, res) =>{
         // 根据 \ 转换为数组 截取最后一个数据即可
         listPoster = `${posterUrl}/${listPoster.path.split('\\').pop()}`
 
-        const insert = `insert into lists(listId, listTitle, listUserId, listPoster, listGrade, listTime) 
-                        values('${listId}','${listTitle}', '${listUserId}', '${listPoster}', '${listGrade}', '${Date.now()}')`
+        const insert = `insert into lists(listId, listTitle, listType, listDirection, listUserId, listPoster, listGrade, listTime) 
+                        values('${listId}', '${listTitle}', '${listType}', '${listDirection}', '${listUserId}', '${listPoster}', '${listGrade}', '${Date.now()}')`
         
         execTrans([getSql(insert, '')], err =>{
             if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
@@ -222,7 +224,7 @@ router.get('/get_vdetail', (req, res) =>{
     const {listId, commit} = req.query
 
     // 获取最新的数据
-    let listDetail = `select listTitle, listClick, listDesc, listPoster, listGrade, listTime,
+    let listDetail = `select listTitle, listClick, listDesc, listPoster, listType, listDirection, listGrade, listTime,
                     userId, userEmail, userName from lists  left join users on lists.listUserId = users.userId  WHERE listId='${listId}';`
     // 视频
     let videoDetail = `select * from videos where videoListId='${listId}';`

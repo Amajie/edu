@@ -78,11 +78,26 @@
             :transfer="false"
             :closable="false"
             :mask-closable="false"
-            width="350"
+            width="380"
         >
             <p slot="header" style="color:#f60;text-align:center">
                 <span>创建视频集</span>
             </p>
+            <div class="type">
+                <Select v-model="listType" @on-change="getType" placeholder="选择分类" style="width:120px; marginRight:10px">
+                    <Option :value="item.title"
+                        v-for="(item, index) in typeArr"
+                        :key="index"
+                    >{{item.title}}</Option>
+                </Select>
+                <Select v-model="listDirection" placeholder="选择方向" style="width:120px">
+                    <Option :value="child"
+                        v-for="(child, index) in directionArr"
+                        :key="index"
+                    >{{child}}</Option>
+                </Select>
+            </div>
+
             <div style="text-align:center">
                 <input class="create-title" v-model="listTitle" placeholder="请输入视频集标题" />
                 <div class="upload-video-pic">
@@ -153,6 +168,8 @@ export default {
             listGrade: '1',
             listPoster: '',
             showPoster: '',
+            listType: '',
+            listDirection: '',
             filename: '',
             videoDesc: '',
             videoTitle:'',
@@ -165,7 +182,22 @@ export default {
             cutList: [],
             currentLoad: 0, // 当前下载的量
             fileSize: 0, // 视频的大小
-            uplodaVideoText: '取消上传'
+            uplodaVideoText: '取消上传',
+            typeArr:[
+                {
+                    title: '前端开发',
+                    child: ['HTML5', 'CSS', 'javascript', 'Vue.js', 'React', 'Angular', 'jQuuery', '移动端开发']
+                },
+                {
+                    title: '服务器开发',
+                    child: ['node', 'java', 'python', 'php', 'ASP', 'JSP', 'C语言', 'C++', 'C#']
+                },
+                {
+                    title: '数据库开发',
+                    child: ['Oracle', 'MySQL', 'SQL Server', 'MongoDB']
+                },
+            ],
+            directionArr: []
         }
     },
     created(){
@@ -290,8 +322,10 @@ export default {
         // 创建视频集合
         handleTitle(){
 
-            const {listTitle, listPoster, listGrade, $Message} =this
+            const {listTitle, listPoster, listGrade, listType, listDirection, $Message} =this
 
+            if(!listType) return $Message.warning('请选择分类')
+            if(!listDirection) return $Message.warning('请选择方向')
             if(!listTitle) return $Message.warning('请输入标题')
             if(!listPoster) return $Message.warning('请上传封面')
 
@@ -304,6 +338,8 @@ export default {
             formData.append('listTitle', listTitle)
             formData.append('listPoster', listPoster)
             formData.append('listGrade', listGrade)
+            formData.append('listType', listType)
+            formData.append('listDirection', listDirection)
 
             // 发送请求
             setTitle(formData).then(res=>{
@@ -356,6 +392,15 @@ export default {
 
             })
         },
+        // 获取分类
+        getType(name){
+
+            const index = this.typeArr.findIndex(item => item.title === name)
+
+            this.directionArr = this.typeArr[index].child
+
+            console.log(this.directionArr)
+        },
         // 选择 视频集
         setselectTitle({listUserId, listTitle, listId}){
             // 设置
@@ -399,6 +444,9 @@ export default {
         border: 1px solid #ccd0d7;
         border-radius: 5px;
         outline: none;
+    }
+    .type{
+        margin-bottom: 16px;
     }
     .video-grade{
         margin-top: 16px;
