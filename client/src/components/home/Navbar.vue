@@ -13,6 +13,8 @@
                     <li><span>社区问答</span></li>
                 </ul>
             </div>
+            <!-- 搜索插槽 -->
+            <slot></slot>
             <!-- 账号状态 -->
             <div class="conut">
                 <div class="count-login">
@@ -44,7 +46,7 @@ export default {
         width: 1200px;
         height: 60px;
         margin: 0 auto;
-        line-height: 60px;
+        
         overflow: hidden;
         > div{
             float: left;
@@ -60,6 +62,7 @@ export default {
         .nav{
             color: #b3b3b3;
             margin-left: 20px;
+            line-height: 60px;
             overflow: hidden;
             li{
                 float: left;
@@ -70,8 +73,13 @@ export default {
                 }
             }
         }
+        .search{
+            margin-top: 14px;
+            margin-left: 20px;
+        }
         .conut{
             float: right;
+            line-height: 60px;
             position: relative;
             right: 10px;
             .count-login{

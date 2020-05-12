@@ -280,12 +280,79 @@ router.get('/get_course', (req, res) =>{
 })
 
 
+// 搜索视频
+router.get('/search_video', (req, res) =>{
+
+    const { listType, listGrade, listTitle, listHeat } = req.query
+
+    execTrans(searchVideo(req.query), (err, data) =>{
+        console.log(data)
+        console.log(searchVideo(req.query))
+        if(err || !data[0].length) return res.json({"msg": "获取失败", "code": 500, searchData: [], searchTotal: 0})
+        
+        res.json({"msg": "获取成功", "code":200, searchData: data[0], searchTotal: data[1][0]['count(listId)']})
+    })
+
+})
+
+// 搜索视频
+function searchVideo({ listType, listGrade, listTitle, listNew, limit=0, offset=15}){
+
+    // 默认搜索全部 点击量是最多的 难度 全部 每次 最多获取15记录
+    // 否则 为最新的 就是时间降序
+    let init = listNew? ` ORDER BY listTime DESC limit ${limit*offset},${offset};`: ` ORDER BY listClick DESC limit ${limit*offset},${offset};`
+    let condition = '' 
+
+    // 存在分类
+    if(listType){
+        
+        let listTypeStr = ''
+        
+        listType.forEach(item => {
+            listTypeStr += item + '|'
+        })
+        
+        
+    
+        listTypeStr = listTypeStr.substr(0, listTypeStr.length - 1)
+
+        condition = ` and listDirection REGEXP '${listTypeStr}' `
+
+       
+    }
+    
+    // 存在 难度
+    if(listGrade){
+        condition += ` and listGrade=${listGrade} ` 
+    }
+
+    // 存在 关键字
+    if(listTitle){
+
+        let listTitleStr = ''
+
+        for(let i=0; i< listTitle.length; i++){
+            listTitleStr += listTitle[i] + '|'
+        }   
+
+        listTitleStr = listTitleStr.substr(0, listTitleStr.length - 1)
+
+        condition += ` and listTitle REGEXP '${listTitleStr}' ` 
+    }
+
+
+    let insert1 = `select * from lists where listRelease=1 ${condition? condition: ''} ${init}`
+    let insert2 = `select count(listId) from lists where listRelease=1 ${condition? condition: ''}`
+    
+
+    return [getSql(insert1, ''), getSql(insert2, '')]
+}
+
+
 // 根据 courseId返回相应的 sql语句 这里都是查询
 function getCourseSql(courseId, userId){
-    let insrt1 = ''
-    let insrt2 = ''
-
-    console.log(userId)
+    let insert1 = ''
+    let insert2 = ''
 
     switch(courseId){
         // 获取已经发布的
