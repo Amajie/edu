@@ -10,7 +10,7 @@ import '@/assets/icon/iconfont.js'
 
 import 'view-design/dist/styles/iview.css'
 import { Button, Message, Modal, Icon, List, DropdownMenu, Dropdown, DropdownItem,
-  RadioGroup, Radio, Page, Rate, Select, Option, Input} from 'view-design'
+  RadioGroup, Radio, Page, Rate, Select, Option, Input, Upload} from 'view-design'
 
 Vue.component('Button', Button)
 Vue.component('Icon', Icon)
@@ -26,6 +26,7 @@ Vue.component('Rate', Rate)
 Vue.component('Select', Select)
 Vue.component('Option', Option)
 Vue.component('Input', Input)
+Vue.component('Upload', Upload)
 
 Vue.prototype.$Message = Message
 Vue.prototype.$Modal = Modal

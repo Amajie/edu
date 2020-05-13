@@ -295,6 +295,77 @@ router.get('/search_video', (req, res) =>{
 
 })
 
+// 博客图片上传
+router.post('/up_blog_pic', (req, res) =>{
+
+    const listUserId = req.session.userId
+    const posterUrl = `/${'soqhusclecw0000000'}/blog`
+
+
+    // 上传 封面 图片
+    new multiparty.Form({uploadDir: path.resolve(__dirname, `../upVideo/${posterUrl}`)}).parse(req, function(err, fields, files){
+        
+        if(err){
+            return res.json({"msg": "上传失败", "code": 500})
+        }
+        
+        // 获取 图片信息
+        let [blogPic] = files.blogPic
+
+        
+        // C:\vsCode\edu\server\upVideo\soqhusclecw0000000\poster\xtMn528Vd4adhhzK4UblUK92.jpg
+        // 根据 \ 转换为数组 截取最后一个数据即可
+        blogPic = `${posterUrl}/${blogPic.path.split('\\').pop()}`
+
+        res.json({"msg": "创建成功", "code":200, realName:'http://127.0.0.1:6060', blogPicUrl: blogPic})
+
+    })        
+})
+
+// 写文章
+router.post('/write', (req, res) =>{
+
+    // const userId = req.session.userId
+    const userId = '1'
+
+    const {articleTitle, articleContent, articleDraft} = req.body
+
+    const insert = `insert into articles(articleId, articleUserId, articleTitle, articleContent, articleDraft, articleTime) 
+                    values('${getId()}', '${userId}', '${articleTitle}', '${articleContent}', '${articleDraft}', '${Date.now()}')`
+    
+    execTrans([getSql(insert, '')], err =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+
+        res.json({"msg": "提交成功", "code":200})
+    })
+
+})
+
+// 获取文章
+router.get('/get_write', (req, res) =>{
+
+
+    const {articleUserId, articleId} = req.query
+
+    // 文章内容
+    const insert1 = `select * from articles where articleId='${articleId}'`
+    // 博主
+    const insert2 = `select userId, userName from users where userId='${articleUserId}'`
+    // 评论
+    // const insert3 = `select userId, userName from users articleId='${articleId}'`
+    // 点赞 举报 阅读 列表
+    // const insert4 = `select userId, userName from users articleId='${articleId}'`
+    
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500})
+        console.log(data[0])
+        res.json({"msg": "获取成功", "code":200, articleData: data[0][0], userData: data[1][0]})
+    })
+
+})
+
 // 搜索视频
 function searchVideo({ listType, listGrade, listTitle, listNew, limit=0, offset=15}){
 
@@ -399,9 +470,6 @@ function getUpdateSql(body){
 
     return [getSql(insert1, '')]
 }
-
-
-
 
 
 // 获取时间

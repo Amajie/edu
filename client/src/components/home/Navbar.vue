@@ -10,7 +10,7 @@
                 <ul>
                     <li @click="handleNav('/')"><span>首页</span></li>
                     <li @click="handleNav('/teach')"><span>视频教程</span></li>
-                    <li><span>社区问答</span></li>
+                    <li><span>技术博客</span></li>
                 </ul>
             </div>
             <!-- 搜索插槽 -->

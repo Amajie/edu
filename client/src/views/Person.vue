@@ -72,6 +72,7 @@ import Footerbar from '@/components/home/Footerbar.vue'
 // 个人中心组件
 import User from '@/components/person/User.vue'
 import MyCourse from '@/components/person/MyCourse.vue'
+import Community from '@/components/person/Community.vue'
 
 export default {
     name: 'person',
@@ -81,7 +82,7 @@ export default {
                 {title: '个人信息', icon: '&#xeb99;', component: User},
                 {title: '课程中心', icon: '&#xeb99;', component: MyCourse},
                 {title: '社区中心', icon: '&#xeb99;', component: User},
-                {title: '创建社区', icon: '&#xeb99;', component: User},
+                {title: '创建社区', icon: '&#xeb99;', component: Community},
                 {title: '关注粉丝', icon: '&#xeb99;', component: User},
             ],
             activeIndex: 0,
@@ -108,7 +109,9 @@ export default {
         // 个人中心
         User,
         // 我的课程
-        MyCourse
+        MyCourse,
+        // 社区创建
+        Community
     }
 }
 </script>

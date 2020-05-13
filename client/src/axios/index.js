@@ -22,5 +22,11 @@ export const getCourse = params => ajax({url: '/get_course', params})
 export const searchVideo = params => ajax({url: '/search_video', params})
 // 发表评论
 export const insertVideoCommit = data => ajax({url: '/insert_video_commit', data, method: 'post'})
+// 上传问答图片
+export const upBlogPic = data => ajax({url: '/up_blog_pic', data, method: 'post'})
+// 写博客
+export const write = data => ajax({url: '/write', data, method: 'post'})
+// 获取文章数据
+export const getWrite = params => ajax({url: '/get_write', params})
 
 
