@@ -72,7 +72,8 @@ import Footerbar from '@/components/home/Footerbar.vue'
 // 个人中心组件
 import User from '@/components/person/User.vue'
 import MyCourse from '@/components/person/MyCourse.vue'
-import Community from '@/components/person/Community.vue'
+import MyEssay from '@/components/person/MyEssay.vue'
+import Essay from '@/components/person/Essay.vue'
 
 export default {
     name: 'person',
@@ -81,8 +82,8 @@ export default {
             navList: [
                 {title: '个人信息', icon: '&#xeb99;', component: User},
                 {title: '课程中心', icon: '&#xeb99;', component: MyCourse},
-                {title: '社区中心', icon: '&#xeb99;', component: User},
-                {title: '创建社区', icon: '&#xeb99;', component: Community},
+                {title: '文章中心', icon: '&#xeb99;', component: MyEssay},
+                {title: '创作文章', icon: '&#xeb99;', component: Essay},
                 {title: '关注粉丝', icon: '&#xeb99;', component: User},
             ],
             activeIndex: 0,
@@ -110,8 +111,10 @@ export default {
         User,
         // 我的课程
         MyCourse,
-        // 社区创建
-        Community
+        // 我的文章
+        MyEssay,
+        // 写文章
+        Essay
     }
 }
 </script>

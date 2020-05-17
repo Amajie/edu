@@ -2,44 +2,28 @@
     <div class="technology">
         <div class="technology-content">
             <div class="technology-left">
-                <h1>最新社区</h1>
+                <h1>推荐文章</h1>
                 <ul>
-                    <li>
-                        <span class="technology-title">ATOM官网打不开无法下载</span> 
-                        <span class="technology-time">2019-02-09</span>
-                    </li>
-                    <li>
-                        <span class="technology-title">ATOM官网打不开无法下载</span> 
-                        <span class="technology-time">2019-02-09</span>
-                    </li>
-                    <li>
-                        <span class="technology-title">ATOM官网打不开无法下载</span> 
-                        <span class="technology-time">2019-02-09</span>
-                    </li>
-                    <li>
-                        <span class="technology-title">ATOM官网打不开无法下载</span> 
-                        <span class="technology-time">2019-02-09</span>
+                    <li 
+                        v-for="item in recoArticle"
+                        :key="item.articleId"
+                        @click="toBlog(item)"
+                    >
+                        <span class="technology-title">{{item.articleTitle}}</span> 
+                        <span class="technology-time">{{item.articleTime | dateTime}}</span>
                     </li>
                 </ul>
             </div>
             <div class="technology-right">
-                <h1>社区推荐</h1>
+                <h1>最新文章</h1>
                     <ul>
-                        <li>
-                            <span class="technology-title">ATOM官网打不开无法下载</span> 
-                            <span class="technology-time">2019-02-09</span>
-                        </li>
-                        <li>
-                            <span class="technology-title">ATOM官网打不开无法下载</span> 
-                            <span class="technology-time">2019-02-09</span>
-                        </li>
-                        <li>
-                            <span class="technology-title">ATOM官网打不开无法下载</span> 
-                            <span class="technology-time">2019-02-09</span>
-                        </li>
-                        <li>
-                            <span class="technology-title">ATOM官网打不开无法下载</span> 
-                            <span class="technology-time">2019-02-09</span>
+                        <li 
+                            v-for="item in newArticle"
+                            :key="item.articleId"
+                            @click="toBlog(item)"
+                        >
+                            <span class="technology-title">{{item.articleTitle}}</span> 
+                            <span class="technology-time">{{item.articleTime | dateTime}}</span>
                         </li>
                     </ul>
             </div>
@@ -49,7 +33,21 @@
 <script>
 export default {
     name: 'technology',
-    
+    methods:{
+        toBlog({userId, articleId}){
+            this.$router.replace(`/blog/${userId}/${articleId}`)
+        }
+    },
+    props: {
+        recoArticle: {
+            type: Array,
+            default: () => ([])
+        },
+        newArticle: {
+            type: Array,
+            default: () => ([])
+        }
+    }
 }
 </script>
 <style lang="less" scoped>

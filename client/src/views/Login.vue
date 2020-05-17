@@ -93,8 +93,6 @@ export default {
                    })
                 }
 
-                console.log(res)
-
 
                 this.toHome('登陆成功，即将前往首页...', users)
 

@@ -41,7 +41,7 @@ export default new Router({
             component: () => import('@/views/Play.vue')
         },
         {
-            path: '/blog',
+            path: '/blog/:userId/:articleId',
             name: 'blog',
             component: () => import('@/views/Blog.vue')
         }

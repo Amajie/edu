@@ -17,20 +17,27 @@
             <slot></slot>
             <!-- 账号状态 -->
             <div class="conut">
-                <div class="count-login">
-                    <span @click="$router.replace('/login')" title="前往登陆">登陆</span>
+                <div v-if="!users.userId" @click="handleNav('/login')" class="count-login">
+                    <span title="前往登陆">登陆</span>
                 </div>
-                <!-- <div class="avatar">
+                <div v-else @click="handleNav('/person')" class="avatar">
                     <img src="./imgs/user_avatar.jpg">
-                </div> -->
+                </div>
             </div>
         </div>
     </div>
 </template>
 <script>
 
+import {mapState} from 'vuex'
+
 export default {
     name: 'navbar',
+    computed: {
+        ...mapState([
+            'users'
+        ])
+    },
     methods:{
         handleNav(url){
             this.$router.replace(url)

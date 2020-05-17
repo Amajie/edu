@@ -43,10 +43,10 @@
                         <span>作者：{{userData.userName}}</span>
                         <span>时间：{{articleData.articleTime | dateTime}}</span>
                         <span>阅读 ({{articleData.articleReader}})</span>
-                        <span>评论 ({{articleData.articleCommit}})</span>
-                        <span>点赞 ({{articleData.articleLike}})</span>
-                        <span>举报 ({{articleData.articleOppose}})</span>
-                        <span>收藏 ({{articleData.articleCollect}})</span>
+                        <span>评论 ({{articleData.articleCommit }})</span>
+                        <span>点赞 ({{likeList | filterNum}})</span>
+                        <span>举报 ({{opposeList | filterNum}})</span>
+                        <span>收藏 ({{collectList | filterNum}})</span>
                     </div>
                     <div class="blog-reader">
                         <div class="blog-body">
@@ -56,13 +56,24 @@
                             <div v-html="articleData.articleContent"></div>
                         </div>
                         <div class="blog-opa">
-                            <Button ghost icon="ios-heart" type="info">点赞</Button>
-                            <Button ghost icon="ios-flash" type="error">举报</Button>
-                            <Button ghost icon="ios-flower" type="warning">收藏</Button>
+                            <Button :ghost="!likeFlag" icon="ios-heart" @click.native="handleUpWrite(1)" type="info">
+                                {{likeFlag? '已': ''}}点赞
+                            </Button>
+                            <Button :ghost="!opposeFlag" icon="ios-flash" @click.native="handleUpWrite(2)" type="error">
+                                {{opposeFlag? '已': ''}}举报
+                            </Button>
+                            <Button :ghost="!collectFlag" icon="ios-flower" @click.native="handleUpWrite(3)" type="warning">
+                                {{collectFlag? '已': ''}}收藏
+                            </Button>
                         </div>
                     </div>
                     <!-- 评论 -->
-                    <Commit></Commit>
+                    <Commit
+                        :userName="users.userName"
+                        :commitData="commitData"
+                        :commitArticleId="articleId"
+                        :userId="users.userId"
+                    ></Commit>
                 </div>
             </div>
         </div>
@@ -77,33 +88,103 @@ import Footerbar from '@/components/home/Footerbar.vue'
 import Commit from '@/components/blog/Commit.vue'
 
 
-import {getWrite} from '@/axios/index.js'
-
+import {getWrite, upWrite} from '@/axios/index.js'
+import {mapState} from 'vuex'
 
 export default {
     name: 'blog',
     data(){
         return {
             articleData: {},
-            userData: {}
+            userData: {},
+            commitData: [],
+            likeList: '',
+            opposeList: '',
+            collectList: '',
+            articleId: ''
         }
     },
     created(){
-        getWrite({
-            articleUserId: 'soqhusclecw0000000',
-            articleId: 't21zuylwbgw0000000'
-        }).then(res =>{
-            const {code, articleData, userData} = res.data
 
-            // 失败
+        // 获取数据
+        const {userId, articleId} = this.$route.params
+        // 获取这个 文章的id
+        this.articleId = articleId
+        // 发送请求
+        getWrite({
+            articleUserId: userId,
+            articleId
+        }).then(res =>{
+            const {code, articleData, userData, commitData} = res.data
+
+            // 失败 
             if(code === 500) return console.log('获取失败')
 
             this.articleData = articleData
             this.userData = userData
+            this.commitData = commitData
 
+            this.likeList = articleData.likeList
+            this.opposeList = articleData.opposeList
+            this.collectList = articleData.collectList
         })
     },
+    computed:{
+        ...mapState([
+            'users'
+        ]),
+        likeFlag(){
+            return this.likeList.indexOf(this.users.userId) != -1    
+        },
+        opposeFlag(){
+            return this.opposeList.indexOf(this.users.userId) != -1
+        },
+        collectFlag(){
+            return this.collectList.indexOf(this.users.userId) != -1
+        },
+    },
     methods:{
+        // 发送请求
+        handleUpWrite(readerId){
+
+            const {likeList, opposeList, collectList, articleId,
+                likeFlag, opposeFlag, collectFlag, users, $Message} = this
+
+            // 无需进行重复操作
+            if((readerId === 1 && likeFlag) || (readerId === 2 && opposeFlag) || 
+                (readerId === 3 && collectFlag)) return console.log('重复')
+
+            // 否则发送请求
+            upWrite({
+                readerId,
+                articleId
+            }).then(res =>{
+                // 失败
+                if(res.data.code === 500) 
+                    return $Message.error('操作失败，请稍后再试')
+                // 点赞操作
+                if(readerId === 1){
+                    $Message.success('感谢点赞')
+                    this.likeList += `${users.userId}|`
+                // 举报操作
+                }else if(readerId === 2){
+                    $Message.success('举报成功')
+                    this.opposeList += `${users.userId}|`
+                // 收藏操作
+                }else{
+                    $Message.success('感谢收藏')
+                    this.collectList += `${users.userId}|`
+                }
+            })
+        }
+    },
+
+    filters:{
+        filterNum(list){
+
+            return list.split('|').filter(n => n).length
+
+        }
     },
     components:{
         Navbar,

@@ -4,7 +4,7 @@
         <div class="home-main">
             <Carousel></Carousel>
             <Course :courseData="courseData"></Course>
-            <Technology></Technology>
+            <Technology v-if="recoArticle.length" :recoArticle="recoArticle" :newArticle="newArticle"></Technology>
             <Videos></Videos>
         </div>
         <Footerbar></Footerbar>
@@ -26,15 +26,20 @@ export default {
     name: 'home',
     data(){
         return {
-            courseData: []
+            courseData: [],
+            newArticle: [],
+            recoArticle: []
         }
     },
     created(){
         getHome().then(res =>{
-            const {code, homeData} = res.data
+            const {code, homeData, newArticle, recoArticle} = res.data
             if(code === 500) return console.log('暂无数据')
-            console.log(homeData)
-            this.courseData = homeData[0]
+
+            this.courseData = homeData
+            this.newArticle = newArticle
+            this.recoArticle = recoArticle
+
         })
     },
     components:{

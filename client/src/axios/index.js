@@ -26,7 +26,13 @@ export const insertVideoCommit = data => ajax({url: '/insert_video_commit', data
 export const upBlogPic = data => ajax({url: '/up_blog_pic', data, method: 'post'})
 // 写博客
 export const write = data => ajax({url: '/write', data, method: 'post'})
+// 更新博客数据
+export const upWrite = data => ajax({url: '/up_write', data, method: 'post'})
+// 发表评论
+export const commit = data => ajax({url: '/commit', data, method: 'post'})
 // 获取文章数据
 export const getWrite = params => ajax({url: '/get_write', params})
+// 获取 个人 数据
+export const getMyWrite = params => ajax({url: '/get_my_write', params})
 
 

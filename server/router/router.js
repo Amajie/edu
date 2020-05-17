@@ -209,12 +209,24 @@ router.post('/insert_video_commit', jwt, (req, res) =>{
 router.get('/get_home', (req, res) =>{
     // 获取最新的数据
     let newList = `select * from lists where listRelease=1 ORDER BY listTime DESC limit 0, 2`
+    // 推荐文章
+    let recoArticle= `select articleId, articleTitle, articleTime, userId from articles 
+                    left join users on articles.articleUserId = users.userId ORDER BY articleReader DESC limit 5`
+    // 最新文章
+    let newArticle = `select articleId, articleTitle, articleTime, userId from articles 
+                    left join users on articles.articleUserId = users.userId ORDER BY articleTime DESC limit 5`
 
-    execTrans([getSql(newList, '')], (err, homeData) =>{
+    const sqlArr = [getSql(newList, ''), getSql(recoArticle, ''), getSql(newArticle, '')]
+
+    execTrans(sqlArr, (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, homeData: []})
 
-        res.json({"msg": "获取成功", "code":200, homeData: homeData})
+        let homeData = data[0]
+        let recoArticle = data[1]
+        let newArticle = data[2]
+
+        res.json({"msg": "获取成功", "code":200, homeData, recoArticle, newArticle})
     })
 
 })
@@ -348,23 +360,149 @@ router.get('/get_write', (req, res) =>{
 
     const {articleUserId, articleId} = req.query
 
+    // 更新阅读数量
+    const insert1 = `UPDATE articles SET articleReader = articleReader+1 where articleId='${articleId}'`
     // 文章内容
-    const insert1 = `select * from articles where articleId='${articleId}'`
+    const insert2 = `select * from articles where articleId='${articleId}'`
+
     // 博主
-    const insert2 = `select userId, userName from users where userId='${articleUserId}'`
-    // 评论
-    // const insert3 = `select userId, userName from users articleId='${articleId}'`
-    // 点赞 举报 阅读 列表
-    // const insert4 = `select userId, userName from users articleId='${articleId}'`
+    const insert3 = `select userId, userName from users where userId='${articleUserId}'`
+
+
+    // 评论内容
+    const insert4 = `select commitArticleId, commitContent, commitId, commitTime, commitUserId, userId, 
+                    userName from commits left join users on commits.commitUserId=users.userId 
+                    WHERE commitArticleId='${articleId}';`
+
+    const insert5 = `select * from replys left join users on replys.replyUserId=users.userId WHERE replyArticleId='${articleId}';`
+
+    const insert6 = `select userName from replys left join users on replys.replyTargetId=users.userId WHERE replyArticleId='${articleId}';`
+
+    const sqlArr = [getSql(insert1, ''), getSql(insert2, ''), getSql(insert3, ''),
+                    getSql(insert4, ''), getSql(insert5, ''), getSql(insert6, '')]
     
-    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+    execTrans(sqlArr, (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500})
-        console.log(data[0])
-        res.json({"msg": "获取成功", "code":200, articleData: data[0][0], userData: data[1][0]})
+        
+
+        const articleData = data[1][0]
+        const userData = data[2][0]
+
+        const commitData = handleCommit(data)
+
+
+        console.log(commitData)
+
+        res.json({"msg": "获取成功", "code":200, articleData, userData, commitData})
     })
 
 })
+
+
+/***
+ * 更新文章
+ * 无参数、默认即为修改文章内容
+ * 1 修改点赞
+ * 2 修改举报
+ * 3 修改收藏
+ */
+router.post('/up_write', (req, res) =>{
+
+    const {articleId, articleContent, articleTitle, readerId} = req.body
+
+    let str = ''
+    let userId = 'soqhusclecw0000000'
+
+    switch(readerId){
+        // case 1:
+        //     str = 'articleCommit = articleCommit+1'
+        //     break
+        case 1:
+            str = `likeList = CONCAT(likeList, '${userId}|')`
+            break
+        case 2:
+            str = `opposeList = CONCAT(opposeList, '${userId}|')`
+            break
+        case 3:
+            str = `collectList = CONCAT(collectList, '${userId}|')`
+            break
+            // 默认
+        default:
+            str = `articleContent = ${articleContent}, articleTitle = ${articleTitle}`
+    }
+
+
+
+    const insert = `UPDATE articles SET ${str} WHERE articleId='${articleId}'`
+
+    execTrans([getSql(insert, '')], (err, data) =>{
+        // 发布失败
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+        // 成功
+        res.json({"msg": "更新成功", "code": 200})
+    })
+})
+
+
+// 发表评论 以及 插入消息
+router.post('/commit', (req, res) =>{
+
+
+    const {commitArticleId, commitContent, replyTargetId, replyCommitId} = req.body
+    
+    
+    const commitId =  getId()
+    const commitTime =  getTime()
+    const userId =  req.session.userId
+
+    // 评论
+    let insert1 = `INSERT INTO commits(commitId, commitUserId, commitArticleId, commitContent, commitTime) 
+        VALUES('${commitId}', '${userId}', '${commitArticleId}', '${commitContent}', '${commitTime}')`
+
+    // 修改评论数据
+    let insert2 = `UPDATE articles SET articleCommit = articleCommit+1 where articleId='${commitArticleId}'`
+
+    // 回复
+    if(replyCommitId){
+        insert1 = `INSERT INTO replys(replyId, replyUserId, replyTargetId, replyCommitId, replyContent, replyArticleId, replyTime) 
+        VALUES('${commitId}', '${userId}', '${replyTargetId}', '${replyCommitId}', '${commitContent}', '${commitArticleId}', '${commitTime}')`
+    }
+
+    
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "评论失败", "code": 500})
+        
+        res.json({"msg": "评论成功", "code": 200, commitId, commitTime})
+
+    })
+})
+
+
+// 获取用户的个人文章
+router.get('/get_my_write', (req, res) =>{
+
+    const {limit=0, offset=10} = req.query
+
+    const userId = req.session.userId
+
+    // 文章数据
+    const insert1 = `select articleId, articleTitle, articleDraft, articleTime, articleReader, 
+                    articleCommit, userId, userName from articles  left join users on articles.articleUserId = users.userId 
+                        where articleUserId='${userId}' limit ${limit*offset},${offset};`
+    // 文章总条数
+    const insert2 = `select count(articleId) from articles WHERE articleUserId='${userId}';`
+
+
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
+        res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
+
+    })
+})
+
 
 // 搜索视频
 function searchVideo({ listType, listGrade, listTitle, listNew, limit=0, offset=15}){
@@ -469,6 +607,50 @@ function getUpdateSql(body){
     }
 
     return [getSql(insert1, '')]
+}
+
+
+// 处理评论内容
+function handleCommit(data){
+
+    let commitData = data[3]
+    let replyData = data[4]
+    let replyTargetData = data[5]
+
+    let replyObj = {}
+    
+
+    commitData.forEach((item, index) =>{
+
+        // 看是否存在数组 不存在 创建
+        commitData[index].replyData? '': commitData[index].replyData = []
+
+        replyData.forEach((reply, i) =>{
+            if(item.commitId === reply.replyCommitId){
+                // 回复用户
+                const {replyId, replyContent, replyArticleId, 
+                        replyCommitId, replyTime, replyUserId, replyTargetId, userName} = reply
+
+                replyObj = {
+                    replyId,
+                    replyContent,
+                    replyUserId,
+                    replyTargetId,
+                    replyName: userName,
+                    replyTargetName: replyTargetData[i].userName,
+                    replyAvatar: '',
+                    replyTargetAvatar: '',
+                    replyArticleId,
+                    replyCommitId,
+                    replyTime,
+                }
+
+                commitData[index].replyData.push(replyObj)
+            }
+        })
+    })
+
+    return commitData
 }
 
 

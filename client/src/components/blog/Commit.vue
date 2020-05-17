@@ -6,62 +6,68 @@
         <div class="show-content">
             <div class="send-commit"> 
                 <div class="send-center">
-                    <textarea value={commitContent}  class="commit-comtent"></textarea>
+                    <textarea v-model="commitContent" :placeholder="placeholderCommit"  class="commit-comtent"></textarea>
                 </div>
                 <div class="send-bottom">
                     <div class="send-btn">
                         <span>
                             还能输入
-                            <span :style="{color: maxFlag? '#000': 'red'}">{{maxFlag}}</span>
+                            <span :style="{color: surplusLen? '#000': 'red'}">{{surplusLen}}</span>
                             个字
                         </span>
-                        <Button type="primary" :disabled="replyFlag" danger>取消回复</Button>
-                        <Button type="primary" danger>发表评论</Button>
+                        <Button type="error" :disabled="!replyUser" @click.native="() => {replyUser=false; commitContent=''}" danger>取消回复</Button>
+                        <Button type="primary" danger @click="handleCommit">发表评论</Button>
                     </div>
                 </div>
             </div>
             <div class="show-commit">
-                <!-- <div class="no-commit"> 暂无评论数据 </div> -->
-                <div class="show-list">
+                <div v-if="!commitData.length" class="no-commit"> 暂无评论数据 </div>
+                <div v-else class="show-list">
                     <ul>
-                        <li>
+                        <li
+                            v-for="(commit, index) in commitData"
+                            :key="index"
+                        >
                             <div class="commit-content">
                                 <div class="commit-top">
                                     <div class="user-info">
                                         <img src="../home/imgs/i1.png" />
-                                        <span>车神我也:</span>
+                                        <span>{{commit.userName}}:</span>
                                     </div>
                                     <div class="time-info">
-                                        <span id="position">1楼</span>
+                                        <span id="position">{{index+1}}楼</span>
                                         <span>&lt;---&gt;</span>
-                                        <span id="time">2020-02-12</span>
+                                        <span id="time">{{commit.commitTime | dateTime}}</span>
                                     </div>
                                 </div>
                                 <div class="commit-center">
-                                    你好呀哈哈哈
-                                    <span class="commit-reply">回复</span>
+                                    {{commit.commitContent}}
+                                    <span class="commit-reply" @click="getReplyInfo(commit, index)">回复</span>
                                 </div>
                             </div>
                             <!-- 回复列表 -->
                             <ul>
-                                <li key={replyObj.replyId}>
+                                <li 
+                                    v-for="(reply, i) in commit.replyData"
+                                    :key="i"
+                                >
                                     <div class="reply-top">
                                         <div>
                                             <img src="../home/imgs/i1.png" />
-                                            <span>黄家驹</span>
+                                            <span>{{reply.replyName}}</span>
                                         </div>
                                         <span>回复</span>
                                         <div>
                                             <img src="../home/imgs/i1.png" />
-                                            <span>刘德华</span>
+                                            <span>{{reply.replyTargetName}}</span>
                                         </div>
                                         <span class="reply-time">
-                                            2020-02-12
+                                            {{reply.replyTime | dateTime}}
                                         </span>
                                     </div>
                                     <div class="reply-center">
-                                        不呼啦
-                                        <span class="commit-reply">回复</span>
+                                        {{reply.replyContent}}
+                                        <span class="commit-reply" @click="getReplyInfo(reply, index)">回复</span>
                                     </div>
                                 </li>
                             </ul>
@@ -74,15 +80,139 @@
 </template>
 
 <script>
+import {commit} from '@/axios/index.js'
 export default {
     name: 'blog',
     data(){
         return {
-            maxFlag: 0,
-            replyFlag: true
+            commitContent: '',
+            replyUser: false,
+            placeholderCommit: '',
+            maxCommitLen: 88,// 最大的评论长度
+            surplusLen: 88// 剩余的评论长度
+
         }
     },
     methods:{
+        handleCommit(){
+            const {commitArticleId, commitContent, replyUser, $Message} = this
+
+            if(!commitContent) return $Message.error('评论不能为空')
+
+            let data = {
+                commitArticleId,
+                commitContent
+            }
+
+            if(replyUser){
+                data = {
+                    ...data, 
+                    replyTargetId: replyUser.userId, 
+                    replyCommitId: replyUser.commitId
+                }
+            }
+
+            commit(data).then(res =>{
+
+                const {code, commitId, commitTime} = res.data
+
+                if(res.data.code === 500) return $Message.error('评论失败，请稍后再试')
+
+                this.commutSuccess(commitId, commitTime)
+                $Message.success('感谢您的评论')
+            })
+        },
+        // 评论成功
+        commutSuccess(commitId, commitTime){
+            const {replyUser, commitContent, commitArticleId, userName, userId} = this
+
+            this.commitContent = ''
+
+            // 默认是新评论
+            let commit = {
+                commitArticleId,
+                commitContent,
+                commitId,
+                commitTime,
+                commitUserId: userId,
+                replyData: [],
+                userId,
+                userName
+            }
+            // 说明是回复
+            if(replyUser){
+                commit = {
+                    replyArticleId: commitArticleId,
+                    replyAvatar: '',
+                    replyCommitId: replyUser.commitId,
+                    replyContent: commitContent,
+                    replyId: commitId,
+                    replyName: replyUser.userName,
+                    replyTargetAvatar: '',
+                    replyTargetId: replyUser.userId,
+                    replyTargetName: userName,
+                    replyTime: commitTime,
+                    replyUserId: userId,
+                }
+
+                this.commitData[replyUser.index].replyData.unshift(commit)
+            }else{
+                this.commitData.unshift(commit)
+            }
+        },
+        // 获取回复目标用户信息
+        getReplyInfo({commitId, userId, userName, replyCommitId, replyUserId, replyName}, index){
+
+            // 情况评论信息
+            this.commitContent = ''
+            //这是回复楼主的
+            if(commitId){
+                this.replyUser = {commitId, userId, userName, index}
+            // 这是回复楼主评论下面的其他用户
+            }else{
+                this.replyUser = { commitId: replyCommitId, userId: replyUserId, userName: replyName, index}
+            }
+        }
+    },
+    watch:{
+        replyUser:{
+            handler(newVal, oldVal) {
+                if(newVal){
+                    this.placeholderCommit = `@${newVal.userName}`
+                }else{
+                    this.placeholderCommit = '请输入评论内容'
+                }
+            },
+            immediate: true
+        },
+        commitContent(newContent, oldContent){
+
+            if(newContent.length > this.maxCommitLen){
+                this.commitContent = oldContent
+            }
+
+            this.surplusLen = this.maxCommitLen - this.commitContent.length
+            
+        }
+    },
+
+    props: {
+        commitArticleId: {
+            type: String,
+            default: ''
+        },
+        commitData: {
+            type: Array,
+            default: () => ([])
+        },
+        userName: {
+            type: String,
+            default: ''
+        },
+        userId: {
+            type: String,
+            default: ''
+        }
     }
 }
 </script>
