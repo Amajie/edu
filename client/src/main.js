@@ -3,6 +3,9 @@ import App from "./App.vue"
 import router from "./router"
 import store from "./store/store"
 
+import cookies from 'vue-cookies'
+Vue.use(cookies)
+
 import '@/assets/common/common.less'
 // 字体图标
 import '@/assets/icon/iconfont.css'
@@ -10,7 +13,8 @@ import '@/assets/icon/iconfont.js'
 
 import 'view-design/dist/styles/iview.css'
 import { Button, Message, Modal, Icon, List, DropdownMenu, Dropdown, DropdownItem,
-  RadioGroup, Radio, Page, Rate, Select, Option, Input, Upload, Table} from 'view-design'
+  RadioGroup, Radio, Page, Rate, Select, Option, Input, Upload, Table, Carousel, 
+  CarouselItem, Spin} from 'view-design'
 
 Vue.component('Button', Button)
 Vue.component('Icon', Icon)
@@ -28,6 +32,9 @@ Vue.component('Option', Option)
 Vue.component('Input', Input)
 Vue.component('Upload', Upload)
 Vue.component('Table', Table)
+Vue.component('Carousel', Carousel)
+Vue.component('CarouselItem', CarouselItem)
+Vue.component('Spin', Spin)
 
 Vue.prototype.$Message = Message
 Vue.prototype.$Modal = Modal

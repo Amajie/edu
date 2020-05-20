@@ -1,6 +1,6 @@
 <template>
     <div class="my-video">
-        <div class="my-video-content">
+        <div v-if="courseData.length" class="my-video-content">
             <div class="video-list">
                 <ul class="list-wrap">
                     <li
@@ -35,17 +35,24 @@
                                 </Button>
                                 <DropdownMenu slot="list">
                                     <DropdownItem>视频详情</DropdownItem>
-                                    <DropdownItem @click.native="showModal(item, index)">我要发布</DropdownItem>
+                                    <DropdownItem>删除视频</DropdownItem>
+                                    <DropdownItem @click.native="showModal(item, index)">{{item.listRelease === 0? '我要发布': '编辑简介'}}</DropdownItem>
                                 </DropdownMenu>
                             </Dropdown>
+                        </div>
+                        <div :class="['pro', {success: item.listRelease === 1}]">
+                            <span>
+                                {{item.listRelease === 0? '未发布': '已发布'}}
+                            </span>
                         </div>
                     </li>
                 </ul>
             </div>
             <div v-if="courseTotal" class="page">
-                <Page :current="1" :total="courseTotal*10" simple />
+                <Page :current="limit" :total="courseTotal*10" simple />
             </div>
         </div>
+        <NoData v-else />
         <!-- 简介框 -->
         <Modal 
             v-model="descModal"
@@ -71,7 +78,11 @@
 </template>
 
 <script>
+
+import NoData  from '@/components/com/NoData.vue'
+
 import {getCourse, upTitle} from '@/axios/index'
+
 export default {
     data(){
         return {
@@ -81,19 +92,31 @@ export default {
             loading: false,
             listDesc: '',
             listId: '', // 编辑简介视频集 id
-            listIndex: '' // 编辑简介视频集 索引
+            listIndex: '', // 编辑简介视频集 索引
+            limit: 1,
+            offset: 5,
+            courseId: 1
         }
     },
     created(){
-        getCourse({
-            courseId: 1
-        }).then(res =>{
-            const {code, courseData, courseTotal} = res.data
-            if(code === 200){
-                this.courseData = courseData
-                this.courseTotal = courseTotal
-            }
-        })
+        // 获取用户的id
+        const {targetUserId} = this.$route.params
+        this.targetUserId = targetUserId
+        
+        const {activeIndex, sendRequest, sendCollect, $store} = this
+        const users = this.$cookies.get('users')
+
+        if(this.activeIndex === 0){
+
+            // 如果users 不存在 或者 不是用户自己访问 则不能获取未发布的的视频
+            // 设置 courseId = =2 即可
+            this.courseId = users && users.userId === targetUserId? 1: 2
+
+            // 发送请求
+            sendRequest()
+        }else{
+            sendCollect()
+        }
     },
     methods:{
         handleclose(){
@@ -122,13 +145,45 @@ export default {
 
             })
         },
+        // 发送请求获取数据
+        sendRequest(){
 
+            const {limit, offset, targetUserId, courseId} = this
+
+            getCourse({
+                courseId,
+                limit: limit - 1,
+                offset,
+                userId: targetUserId
+            }).then(res =>{
+
+                const {code, courseData, courseTotal} = res.data
+
+                if(code === 200){
+                    this.courseData = courseData
+                    this.courseTotal = Math.ceil(courseTotal/offset)
+                }
+            })
+        },
+        // 获取收藏的
+        sendCollect(){
+            console.log('搜藏')
+        },
         // 显示 简介 对话框
         showModal({listId}, listIndex){
             this.listId = listId
             this.listIndex = listIndex
             this.descModal = true
         }
+    },
+    props: {
+        activeIndex: {
+            type: Number,
+            default: 0
+        }
+    },
+    components:{
+        NoData
     }
 }
 </script>
@@ -179,6 +234,18 @@ export default {
                         top: 50%;
                         z-index: 1;
                         transform: translateY(-50%);
+                    }
+                    .pro{
+                        position: absolute;
+                        right: 10px;
+                        top: 10px;
+                        color: #fff;
+                        border-radius: 10px;
+                        padding: 5px 10px;
+                        background-color: red;
+                    }
+                    .success{
+                        background-color: #4bb895;
                     }
                 }
             }

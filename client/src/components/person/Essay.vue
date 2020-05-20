@@ -1,5 +1,5 @@
 <template>
-    <div id="write">
+    <div class="write">
         <!-- 图片上传 -->
         <div class="write-pic">
             <Input readonly
@@ -186,10 +186,7 @@ export default {
 }
 </script>
 <style lang="less" scoped>
-.community{
-
-}
-#write{
+.write{
     padding: 20px;
     > div{
         margin: 10px;

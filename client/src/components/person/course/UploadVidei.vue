@@ -8,10 +8,11 @@
                         <span>上传视频</span>
                         <input @change="getVideo($event)" type="file">
                     </div>
-                    <div class="desc">
+                    <!-- 因为暂时没有做后台管理 因此 暂时没这个提示功能 -->
+                    <!-- <div class="desc">
                         <span>当前审核队列</span>
                         <span class="info">繁忙</span>
-                    </div>
+                    </div> -->
                 </div>
                 <div v-else class="progress">
                     <p>
@@ -257,7 +258,24 @@ export default {
         // 发送 切片
         sendVideoCut(videoData){
             
+            // 没有登陆
+            if(!this.$cookies.get('users')){
+                return this.$Modal.confirm({
+                    title: '没有权限',
+                    content: '亲，请先登陆，才能继续操作',
+                    cancelText: '取消',
+                    okText: '确认',
+                    onOk: () =>{
+                        $router.replace('/login')
+                    },
+                    onCancel: () =>{
+                        this.fileSize = 0
+                    }
+                })
+            }
+
             const formData = new FormData()
+
             formData.append('chunk', videoData.chunk)
             formData.append('filename', videoData.filename)
             formData.append('index', videoData.index)
@@ -399,7 +417,6 @@ export default {
 
             this.directionArr = this.typeArr[index].child
 
-            console.log(this.directionArr)
         },
         // 选择 视频集
         setselectTitle({listUserId, listTitle, listId}){

@@ -6,10 +6,10 @@
                     v-for="(item, index) in navData"
                     :key="index" 
                     :class="{active: activeIndex === index}"
-                    @click="handleNav(index, item.component)">{{item.title}}</span>
+                    @click="handleNav(item, index)">{{item.title}}</span>
             </div>
             <div class="content">
-                <components :is="childComponent"></components>
+                <components :key="activeIndex" :activeIndex="activeIndex" :is="childComponent"></components>
             </div>
         </div>
     </div>
@@ -28,16 +28,14 @@ export default {
             UploadVideo: UploadVideo,
             activeIndex: 0,
             navData: [
-                {title: '我的上传', component: MyVideo},
-                {title: '我的审核', component: MyVideo},
-                {title: '我的发布', component: MyVideo},
-                {title: '我的收藏', component: MyVideo},
-                {title: '发布课程', component: UploadVideo}
+                {title: '动态', component: MyVideo, type: 1},
+                {title: '收藏', component: MyVideo, type: 2},
+                {title: '发布视频', component: UploadVideo}
             ]
         }
     },
     methods:{
-        handleNav(index, component){
+        handleNav({component, type}, index){
             this.childComponent = component
             this.activeIndex = index
         }

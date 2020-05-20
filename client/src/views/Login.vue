@@ -133,7 +133,11 @@ export default {
                 onClose: () =>{
                     // 设置 用户信息 保存到 vuex中
                     this.setUsers(users)
-                    this.$router.replace('/person')
+                    localStorage.setItem('users', JSON.stringify(users))
+
+                    this.$cookies.set('users', users, 60*60*4)
+                    
+                    this.$router.replace('/')
                 }
             })
         },

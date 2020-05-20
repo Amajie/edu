@@ -6,7 +6,7 @@
 </template>
 <script>
 
-import Footerbar from '@/components/home/Footerbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
 
 export default {
     name: 'vplay',

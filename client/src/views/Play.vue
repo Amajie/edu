@@ -35,8 +35,8 @@
 </template>
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
 import VideoShow from '@/components/play/VideoShow.vue'
 
 import {getVdetail, insertVideoCommit} from '@/axios/index.js'

@@ -38,8 +38,8 @@
                         <li @click="listGrade=3" :class="{active: listGrade === 3}">高级</li>
                     </ul>
                 </div>
-                <div class="teaching-list">
-                    <ul>
+                <div v-if="searchData.length" class="teaching-list">
+                    <ul class="teaching-search">
                         <li 
                             v-for="item in searchData"
                             :key="item.listId"
@@ -58,46 +58,37 @@
                                 </div>
                             </div>
                         </li>
-                        <!-- <li>
-                            <div class="list-top">
-                                <img src="./imgs/i1.png">
-                            </div>
-                            <div class="list-bottom">
-                                <div class="video-title">
-                                    <span class="grade">初级</span>
-                                    <span class="title">小白入门课程小白入门课程小白入门课程</span>
-                                </div>
-                                <div class="video-num">
-                                    10万+播放
-                                </div>
-                            </div>
-                        </li> -->
+
                     </ul>
+                    <div class="teaching-page">
+                        <ul>
+                            <!-- 大于1 不能上一页了 -->
+                            <li @click="handlePrevNext(false)" :class="['prev', `${limit === 1? 'no-active': 'btn'}`]">上一页</li>
+                            <!-- 最大页 不能 下一页 -->
+                            <li @click="handlePrevNext(true)"  :class="['next', `${limit === searchTotal? 'no-active': 'btn'}`]">下一页</li>
+                            <li class="page-total">
+                                <span>当前：{{limit}}/{{searchTotal}} 页</span>
+                            </li>
+                            <li class="print">
+                                <input v-model="printPage" />
+                                <span @click="handlePage" class="print-btn">跳转</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="teaching-page">
-                    <ul>
-                        <!-- 大于1 不能上一页了 -->
-                        <li @click="handlePrevNext(false)" :class="['prev', `${limit === 1? 'no-active': 'btn'}`]">上一页</li>
-                        <!-- 最大页 不能 下一页 -->
-                        <li @click="handlePrevNext(true)"  :class="['next', `${limit === searchTotal? 'no-active': 'btn'}`]">下一页</li>
-                        <li class="page-total">
-                            <span>当前：{{limit}}/{{searchTotal}} 页</span>
-                        </li>
-                        <li class="print">
-                            <input v-model="printPage" />
-                            <span @click="handlePage" class="print-btn">跳转</span>
-                        </li>
-                    </ul>
-                </div>
+                <NoData v-else />
             </div>
+            
         </div>
+        
         <Footerbar></Footerbar>
     </div>
 </template>
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
+import NoData  from '@/components/com/NoData.vue'
 
 import {searchVideo} from '@/axios/index.js'
 
@@ -165,7 +156,7 @@ export default {
                 const {code, searchData, searchTotal} = res.data
 
 
-                if(code === 500) return $Message.error('获取失败')
+                if(code === 500) return this.searchData = []
 
                 this.searchData = searchData
                 this.searchTotal = Math.ceil(searchTotal / offset)
@@ -265,7 +256,8 @@ export default {
     components:{
         // 头部
         Navbar,
-        Footerbar
+        Footerbar,
+        NoData
     }
 }
 </script>
@@ -337,7 +329,7 @@ export default {
                 background: #fff;
                 overflow: hidden;
                 border-radius: 10px;
-                ul{
+                .teaching-search{
                     height: 100%;
                     overflow: hidden;
                     li{
@@ -399,58 +391,58 @@ export default {
                         }
                     }
                 }
-            }
-            // 分页
-            .teaching-page{
-                height: 70px;
-                margin-top: 20px;
-                position: relative;
-                ul{
-                    position: absolute;
-                    left: 50%;
-                    top: 0;
-                    transform: translateX(-50%);
-                    overflow: hidden;
-                    li{
-                        float: left;
-                        padding: 5px;
-                        margin: 0 10px;
-                        &.print{
-                            input{
-                                width: 50px;
-                                height: 18px;
-                                border-radius: 3px;
-                                border: 1px solid #ccc;
-                            }
-                            .print-btn{
-                                color: #fff;
-                                cursor: pointer;
-                                border-radius: 10px;
-                                padding: 2px 10px;
-                                margin-left: 5px;
-                                background: #2189ff;
-                                &:hover{
-                                    color: #ebebeb;
+                // 分页
+                .teaching-page{
+                    height: 70px;
+                    margin-top: 20px;
+                    position: relative;
+                    ul{
+                        position: absolute;
+                        left: 50%;
+                        top: 0;
+                        transform: translateX(-50%);
+                        overflow: hidden;
+                        li{
+                            float: left;
+                            padding: 5px;
+                            margin: 0 10px;
+                            &.print{
+                                input{
+                                    width: 50px;
+                                    height: 18px;
+                                    border-radius: 3px;
+                                    border: 1px solid #ccc;
+                                }
+                                .print-btn{
+                                    color: #fff;
+                                    cursor: pointer;
+                                    border-radius: 10px;
+                                    padding: 2px 10px;
+                                    margin-left: 5px;
+                                    background: #2189ff;
+                                    &:hover{
+                                        color: #ebebeb;
+                                    }
                                 }
                             }
-                        }
-                        // 按钮
-                        &.btn{
-                            cursor: pointer;
-                            color: #787d82;
-                            border-radius: 5px;
-                            
-                            background: #ebeced;
-                            &:hover{
+                            // 按钮
+                            &.btn{
+                                cursor: pointer;
+                                color: #787d82;
+                                border-radius: 5px;
+                                
+                                background: #ebeced;
+                                &:hover{
+                                    color: #93999f;
+                                }
+                            }
+                            &.no-active{
+                                cursor: not-allowed;
+                                background: #f3f5f7;
+                            }
+                            &.page-total{
                                 color: #93999f;
                             }
-                        }
-                        &.no-active{
-                            cursor: not-allowed;
-                            background: #f3f5f7;
-                        }
-                        &.page-total{
-                            color: #93999f;
                         }
                     }
                 }

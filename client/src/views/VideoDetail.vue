@@ -1,5 +1,5 @@
 <template>
-    <div class="video-detail">
+    <div v-show="videoData.length"  class="video-detail">
         <Navbar></Navbar>
         <div class="detail-main">
             <!-- 视频相关信息 -->
@@ -38,7 +38,7 @@
                                 </div>
                                 <div class="user-name">
                                     <h3>{{listData.userName}}</h3>
-                                    <span class="btn">TA的课程</span>
+                                    <span @click="$router.push(`/person/${listData.userId}/1`)" class="btn">TA的课程</span>
                                 </div>
                             </div>
                             <div class="user-desc">
@@ -122,8 +122,8 @@
 </template>
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
 
 import {getVdetail} from '@/axios/index.js'
 

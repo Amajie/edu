@@ -1,8 +1,14 @@
 <template>
      <div class="blog">
-        <Navbar></Navbar>
-        
-
+        <Navbar>
+            <div class="search">
+                <Input search style="width: 350px"
+                    @on-search="initSearch(true)" 
+                    v-model="articleTitle" enter-button 
+                    placeholder="请输入关键字" 
+                />
+            </div>
+        </Navbar>
         <div class="blog-main">
             <!-- 推荐技术文章 -->
             <div class="blog-reco">
@@ -15,21 +21,13 @@
                             <span>热门话题</span>
                         </div>
                         <ul>
-                            <li>
+                            <li
+                                v-for="item in recoArticle"
+                                :key="item.articleId"
+                                @click="handleNav(item)"
+                            >
                                 <i class="icon iconfont">&#xeb99;</i>
-                                <span>行业大牛 ，细说PHP作者，现身PHP中文网直播送书300本，PHP中文网学员超级福利！</span>
-                            </li>
-                            <li>
-                                <i class="icon iconfont">&#xeb99;</i>
-                                <span>行业大牛 ，细说PHP作者，现身PHP中文网直播送书300本，PHP中文网学员超级福利！</span>
-                            </li>
-                            <li>
-                                <i class="icon iconfont">&#xeb99;</i>
-                                <span>行业大牛 ，细说PHP作者，现身PHP中文网直播送书300本，PHP中文网学员超级福利！</span>
-                            </li>
-                            <li>
-                                <i class="icon iconfont">&#xeb99;</i>
-                                <span>行业大牛 ，细说PHP作者，现身PHP中文网直播送书300本，PHP中文网学员超级福利！</span>
+                                <span>{{item.articleTitle}}</span>
                             </li>
                         </ul>
                     </div>
@@ -37,58 +35,47 @@
             </div>
             <!-- 文章显示 -->
             <div class="blog-content">
-                <div class="blog-wrap">
-                    <!-- 作者信息 -->
-                    <div class="blog-info">
-                        <span>作者：{{userData.userName}}</span>
-                        <span>时间：{{articleData.articleTime | dateTime}}</span>
-                        <span>阅读 ({{articleData.articleReader}})</span>
-                        <span>评论 ({{articleData.articleCommit }})</span>
-                        <span>点赞 ({{likeList | filterNum}})</span>
-                        <span>举报 ({{opposeList | filterNum}})</span>
-                        <span>收藏 ({{collectList | filterNum}})</span>
-                    </div>
-                    <div class="blog-reader">
-                        <div class="blog-body">
-                            <div class="blog-title">
-                                <h2>{{articleData.articleTitle}}</h2>
-                            </div>
-                            <div v-html="articleData.articleContent"></div>
-                        </div>
-                        <div class="blog-opa">
-                            <Button :ghost="!likeFlag" icon="ios-heart" @click.native="handleUpWrite(1)" type="info">
-                                {{likeFlag? '已': ''}}点赞
-                            </Button>
-                            <Button :ghost="!opposeFlag" icon="ios-flash" @click.native="handleUpWrite(2)" type="error">
-                                {{opposeFlag? '已': ''}}举报
-                            </Button>
-                            <Button :ghost="!collectFlag" icon="ios-flower" @click.native="handleUpWrite(3)" type="warning">
-                                {{collectFlag? '已': ''}}收藏
-                            </Button>
-                        </div>
-                    </div>
-                    <!-- 评论 -->
-                    <Commit
-                        :userName="users.userName"
+                <div v-show="articleFalg" class="blog-article">
+                    <!-- 返回阅读列表 -->
+                    <span @click="articleFalg = false" 
+                        v-show="searchData.length" 
+                        class="back-to"
+                    >搜索列表</span>
+                    <!-- 一开始 是显示搜索界面-->
+                    <Article
+                        :userData="userData"
                         :commitData="commitData"
-                        :commitArticleId="articleId"
-                        :userId="users.userId"
-                    ></Commit>
+                        :articleData="articleData"
+                        :users="users"
+                        :articleId="articleId"
+                    ></Article>
+                </div>
+                <div v-show="!articleFalg" class="blog-search">
+                    <!-- 返回阅读列表 -->
+                    <span @click="articleFalg = true" 
+                        v-show="articleData.articleId" 
+                        class="back-to"
+                    >返回阅读</span>
+                    <Search 
+                        :searchData="searchData" 
+                        :searchTotal="searchTotal"
+                        @handleNav="handleNav"
+                    ></Search>
                 </div>
             </div>
         </div>
-        <Footerbar></Footerbar>
     </div>
 </template>
 
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
-import Commit from '@/components/blog/Commit.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
+import Article from '@/components/blog/Article.vue'
+import Search from '@/components/blog/Search.vue'
 
 
-import {getWrite, upWrite} from '@/axios/index.js'
+import {getWrite, searchWrite} from '@/axios/index.js'
 import {mapState} from 'vuex'
 
 export default {
@@ -98,10 +85,12 @@ export default {
             articleData: {},
             userData: {},
             commitData: [],
-            likeList: '',
-            opposeList: '',
-            collectList: '',
-            articleId: ''
+            recoArticle: [],
+            searchData: [],
+            searchTotal: 0,
+            articleId: '',
+            articleTitle: '',
+            articleFalg: false
         }
     },
     created(){
@@ -110,86 +99,88 @@ export default {
         const {userId, articleId} = this.$route.params
         // 获取这个 文章的id
         this.articleId = articleId
-        // 发送请求
-        getWrite({
-            articleUserId: userId,
-            articleId
-        }).then(res =>{
-            const {code, articleData, userData, commitData} = res.data
 
-            // 失败 
-            if(code === 500) return console.log('获取失败')
-
-            this.articleData = articleData
-            this.userData = userData
-            this.commitData = commitData
-
-            this.likeList = articleData.likeList
-            this.opposeList = articleData.opposeList
-            this.collectList = articleData.collectList
-        })
+        // 搜索
+        if(userId === 'article' && articleId === 'search'){
+            this.getArticle()
+        }else{
+            this.getArticle(userId, articleId)
+        }
+        
     },
     computed:{
         ...mapState([
             'users'
-        ]),
-        likeFlag(){
-            return this.likeList.indexOf(this.users.userId) != -1    
-        },
-        opposeFlag(){
-            return this.opposeList.indexOf(this.users.userId) != -1
-        },
-        collectFlag(){
-            return this.collectList.indexOf(this.users.userId) != -1
-        },
+        ])
     },
-    methods:{
-        // 发送请求
-        handleUpWrite(readerId){
 
-            const {likeList, opposeList, collectList, articleId,
-                likeFlag, opposeFlag, collectFlag, users, $Message} = this
-
-            // 无需进行重复操作
-            if((readerId === 1 && likeFlag) || (readerId === 2 && opposeFlag) || 
-                (readerId === 3 && collectFlag)) return console.log('重复')
-
-            // 否则发送请求
-            upWrite({
-                readerId,
-                articleId
-            }).then(res =>{
-                // 失败
-                if(res.data.code === 500) 
-                    return $Message.error('操作失败，请稍后再试')
-                // 点赞操作
-                if(readerId === 1){
-                    $Message.success('感谢点赞')
-                    this.likeList += `${users.userId}|`
-                // 举报操作
-                }else if(readerId === 2){
-                    $Message.success('举报成功')
-                    this.opposeList += `${users.userId}|`
-                // 收藏操作
-                }else{
-                    $Message.success('感谢收藏')
-                    this.collectList += `${users.userId}|`
-                }
-            })
+    watch:{
+        searchData(newData, oldData){
+            this.articleFalg = false
         }
     },
+    methods:{
+        // 非搜索界面的文章 和热门话题
+        getArticle(userId, articleId){
+            // 发送请求
+            getWrite({
+                articleUserId: userId,
+                articleId
+            }).then(res =>{
+                const {code, articleData, userData, commitData, recoArticle} = res.data
 
-    filters:{
-        filterNum(list){
+                // 失败 
+                if(code === 500) return console.log('获取失败')
 
-            return list.split('|').filter(n => n).length
+                // userId 存在 才设置 否则 就只要获取热门话题即可
+                if(userId){
+                    this.articleData = articleData
+                    this.userData = userData
+                    this.commitData = commitData
+                    this.articleFalg = true
+                }
+                this.recoArticle = recoArticle
 
+            })
+        },
+
+        // 点击热门列表文章 获取内容
+        handleNav({userId, articleId}){
+            console.log(12321321)
+            // 查看同一篇文章 无需在发生
+            if(articleId === this.articleId) return this.articleFalg = true
+
+            this.getArticle(userId, articleId)
+            this.articleId = articleId
+            this.$router.replace(`/blog/${userId}/${articleId}`)
+        },
+
+        initSearch(){
+            
+            const {articleTitle, $Message} = this
+
+            if(!articleTitle) return $Message.info('请输入关键字')
+
+            // 发送搜索请求
+            searchWrite({
+                articleTitle
+            }).then(res =>{
+
+                const {searchData, searchTotal} = res.data
+
+                this.searchData = searchData
+
+                // token存在 才需要设置
+                searchTotal && (this.searchTotal = searchTotal)
+
+            })
         }
     },
     components:{
         Navbar,
         Footerbar,
-        Commit
+        Article,
+        Search
     }
     
 }
@@ -201,11 +192,10 @@ export default {
     background: #f2f4f6;
     .blog-main{
         width: 1200px;
-        margin: 20px auto;
-        min-height: 100%;
+        margin: 0 auto;
+        padding: 20px 0;
         .blog-reco{
             width: 280px;
-            height: 300px;
             float: right;
             .reco{
                 .write{
@@ -257,25 +247,17 @@ export default {
         .blog-content{
             margin-right: 300px;
             background-color: #fff;
-            .blog-wrap{
+            .blog-article{
                 padding: 20px;
-                .blog-info{
-                    span{
-                        margin-right: 20px;
-                    }
-                }
-                .blog-reader{
-                    .blog-body{
-                        .blog-title{
-                            margin: 15px 0;
-                        }
-                    }
-                    .blog-opa{
-                        margin: 30px 0;
-                        button{
-                            margin-right: 20px;
-                        }
-                    }
+            }
+            .blog-search{
+                padding: 20px;
+            }
+            .back-to{
+                color: #9999a6;
+                cursor: pointer;
+                &:hover{
+                    text-decoration: underline;
                 }
             }
         }

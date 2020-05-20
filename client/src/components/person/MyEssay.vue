@@ -21,7 +21,7 @@
                         <Button type="error" size="small" @click="remove(index)">删除</Button>
                     </template>
                 </Table>
-                <div class="page">
+                <div v-if="writeData.length" class="page">
                     <Page :current="limit" :total="total" simple />
                 </div>
             </div>
@@ -38,8 +38,8 @@ export default {
         return {
             activeIndex: 0,
             navData: [
-                {title: '已发布', id: 0},
-                {title: '已收藏', id: 1}
+                {title: '发布', id: 0},
+                {title: '收藏', id: 1}
             ],
             titleData: [
                 {
@@ -100,17 +100,24 @@ export default {
         },
 
         getWrite(){
-            const {limit, offset} = this
+            
+            const {limit, offset, targetUserId} = this
+
             getMyWrite({
                 limit: limit-1,
-                offset
+                offset,
+                targetUserId
             }).then(res =>{
                 const {code, writeData, writeTotal} = res.data
                 this.writeData = writeData
                 this.total = Math.ceil(writeTotal / offset) * 10
-
-                console.log(writeData)
             })
+        }
+    },
+    props:{
+        targetUserId: {
+            type: String,
+            default: ''
         }
     }
 }

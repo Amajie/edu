@@ -5,7 +5,7 @@
                <ul>
                    <li>
                         <em>用户名</em>
-                        <span>{{users.userName? users.userName: '暂无用户'}}</span>
+                        <span>{{userData.userName? userData.userName: '暂无用户'}}</span>
                    </li>
                    <li>
                         <em>密码</em>
@@ -13,27 +13,27 @@
                    </li>
                    <li>
                         <em>性别</em>
-                        <span>{{users.userGender === 1 ? '男': '女'}}</span>
+                        <span>{{userData.userGender === 1 ? '男': '女'}}</span>
                    </li>
                    <li>
                         <em>个性签名</em>
-                        <span>{{users.userSign ? users.userSign: '暂无个性签名'}}</span>
+                        <span>{{userData.userSign ? userData.userSign: '暂无个性签名'}}</span>
                    </li>
                    <li>
                         <em>个人邮箱</em>
-                        <span>{{users.userEmail ? users.userEmail: '暂无邮箱'}}</span>
+                        <span>{{userData.userEmail ? userData.userEmail: '暂无邮箱'}}</span>
                    </li>
                    <li>
                         <em>居住地址</em>
-                        <span>{{users.userAddress ? users.userAddress: '暂无地址'}}</span>
+                        <span>{{userData.userAddress ? userData.userAddress: '暂无地址'}}</span>
                    </li>
                </ul>
             </div>
-            <div class="change">
+            <div v-if="targetUserId === users.userId" class="change">
                 <ul>
                     <li>
                         <input v-model="userName" placeholder="请输入用户名">
-                        <span @click="changeUsers('userName')">修改</span>
+                        <span @click="changeUsersName()">修改</span>
                     </li>
                     <li>
                         <input v-model="userCode" type="password" placeholder="请输入密码">
@@ -67,7 +67,7 @@
 
 <script>
 
-import {updateUser} from '@/axios/index'
+import {updateUser, updateName, getUser} from '@/axios/index'
 import { mapState, mapMutations } from 'vuex'
 
 export default {
@@ -79,13 +79,27 @@ export default {
             userEmail: '',
             userCode: '',
             userSign: '',
-            userAddress: ''
+            userAddress: '',
+            userData: {}
         }
     },
     computed:{
         ...mapState(['users'])
     },
-    
+    created(){
+
+        const {targetUserId, users} = this
+
+        if(targetUserId != users.userId){
+            getUser({userId: targetUserId}).then(res =>{
+                const {code, userData} = res.data
+                if(code === 500) return console.log('服务器错误')
+                this.userData = userData
+            })
+        }else{
+            this.userData = users
+        }
+    },
     methods:{
 
         ...mapMutations([
@@ -95,7 +109,7 @@ export default {
         changeUsers(key){
 
 
-            const {users, setUsers, $Modal, $Message} = this
+            const {users, $Modal, $Message, handleData} = this
 
             const value = this[key]
 
@@ -117,18 +131,60 @@ export default {
                 setKey: key
             }).then(res =>{
 
-                const {code} = res.data
-                // 修改失败
-                if(code === 500){
-                    return $Message.error('服务错误，请稍后再试')
-                }
-
-                // 更新 vuex 数据 密码不需要更新
-                key === 'userCode' || setUsers({...users, [key]: value})
-                this[key] = ''
-                $Message.success('修改成功')
+                handleData(res.data, key, value)
 
             })
+        },
+        // 修改用户名
+        changeUsersName(){
+
+
+            const {users, userName, $Modal, $Message, handleData} = this
+
+            if(!userName){
+                return $Modal.warning({
+                    title: '提示',
+                    content: '内容不能为空'
+                })
+            }
+
+
+             // 如果性别 与设置之前 一样无需发送请求 直接提示成功
+            if(userName === users.userName){
+                return $Message.success('修改成功')
+            }
+            
+            // 发送请求
+            updateName({
+                userName
+            }).then(res =>{
+                handleData(res.data, 'userName', userName)
+            })
+        },
+        // 处理 修改的数据
+        handleData({code}, key, value){
+
+            const {users, setUsers, $Message} = this
+
+            // 修改失败
+            if(code === 500){
+                return $Message.error('服务错误，请稍后再试')
+            }else if(!code){
+                return $Message.error('用户名已经存在，请重新修改')
+            }
+
+            // 更新 vuex 数据 密码不需要更新
+            key === 'userCode' || setUsers({...users, [key]: value})
+            // 清空数据
+            this[key] = ''
+            this.userData= this.users
+            $Message.success('修改成功')
+        }
+    },
+    props:{
+        targetUserId: {
+            type: String,
+            default: ''
         }
     }
 }

@@ -12,12 +12,12 @@
 </template>
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
 import Carousel from '@/components/home/Carousel.vue'
 import Course from '@/components/home/Course.vue'
 import Technology from '@/components/home/Technology.vue'
 import Videos from '@/components/home/Videos.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
 
 // 请求数据
 import {getHome} from '@/axios/index.js'
@@ -32,6 +32,7 @@ export default {
         }
     },
     created(){
+        // console.log(localStorage.getItem('users'))
         getHome().then(res =>{
             const {code, homeData, newArticle, recoArticle} = res.data
             if(code === 500) return console.log('暂无数据')

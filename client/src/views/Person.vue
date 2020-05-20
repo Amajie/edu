@@ -48,7 +48,7 @@
                                 v-for="(item, index) in navList"
                                 :key="index"
                                 :title="item.title"
-                                @click="handleNav(index, item.component)" 
+                                @click="handleNav(item, index)" 
                                 :class="{active: activeIndex === index}"> 
                                 <i class="icon iconfont" v-html="item.icon"></i>
                                 <span>{{item.title}}</span>
@@ -56,7 +56,7 @@
                         </ul>
                     </div>
                     <div class="show">
-                        <components :is="childComponent"></components>
+                        <components :targetUserId="targetUserId" :is="childComponent"></components>
                     </div>
                 </div>
             </div>
@@ -66,14 +66,16 @@
 </template>
 <script>
 
-import Navbar from '@/components/home/Navbar.vue'
-import Footerbar from '@/components/home/Footerbar.vue'
+import Navbar from '@/components/com/Navbar.vue'
+import Footerbar from '@/components/com/Footerbar.vue'
 
 // 个人中心组件
 import User from '@/components/person/User.vue'
 import MyCourse from '@/components/person/MyCourse.vue'
 import MyEssay from '@/components/person/MyEssay.vue'
 import Essay from '@/components/person/Essay.vue'
+
+import {mapState} from 'vuex'
 
 export default {
     name: 'person',
@@ -84,22 +86,45 @@ export default {
                 {title: '课程中心', icon: '&#xeb99;', component: MyCourse},
                 {title: '文章中心', icon: '&#xeb99;', component: MyEssay},
                 {title: '创作文章', icon: '&#xeb99;', component: Essay},
-                {title: '关注粉丝', icon: '&#xeb99;', component: User},
+                {title: '关注粉丝', icon: '&#xeb99;', component: User}
             ],
             activeIndex: 0,
-            childComponent: User
+            childComponent: User,
+            nav: '',
+            targetUserId: ''
+        }
+    },
+    created(){
+
+        const {targetUserId, nav} = this.$route.params
+        this.targetUserId = targetUserId
+        this.nav = nav
+
+    },
+    computed:{
+        ...mapState([
+            'users'
+        ])
+    },
+    watch:{
+        nav(newNav, oldNav){
+            // 转为number
+            newNav = parseInt(newNav)
+
+            this.childComponent = this.navList[newNav].component
+            this.activeIndex = newNav
         }
     },
     methods: {
         // 处理 点击nav 跳转
-        handleNav(index, component){
+        handleNav({component}, index){
             // 设置当前索引
             this.activeIndex = index
 
             // 设置当前显示的组件
             this.childComponent = component
-
-
+            // 路由跳转
+            this.$router.replace(`/person/${this.targetUserId}/${index}`)
         }
     },
     components:{

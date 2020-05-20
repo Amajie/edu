@@ -55,6 +55,22 @@ router.post('/register', (req, res) =>{
 
 })
 
+// 获取用户的个人信息
+router.get('/get_user', (req, res) =>{
+    const {userId} = req.query
+    // 最新文章
+    let insert = `select userAddress, userCode, userEmail, userGender, userId, userName, userSign
+                 from users where userId='${userId}';`
+
+    execTrans([getSql(insert, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500})
+
+
+        res.json({"msg": "获取成功", "code":200, userData: {...data[0][0], userCode: null}})
+    })
+})
+
 // 更新用户 的信息 除了头像
 router.post('/update_user', (req, res) =>{
     let {setVal, setKey}  = req.body
@@ -64,12 +80,38 @@ router.post('/update_user', (req, res) =>{
 
     const insert = `update users set ${setKey}='${setVal}' where userId='${req.session.userId}'`
 
-
     execTrans([getSql(insert, '')], (err, data) =>{
 
         if(err) return res.json({"msg": "操作失败", "code": 500})
 
         res.json({"msg": "修改成功", "code": 200})
+
+    })
+})
+
+// 更新用户名字
+router.post('/update_name', (req, res) =>{
+
+    let {userName}  = req.body
+
+    execTrans([getSql(`select userName from users where userName='${userName}';`, '')], (err, findData) =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+        // 用户名存在
+        if(findData[0].length) return res.json({"msg": "用户名存在", "code": 0})
+
+        console.log(findData[0].length)
+        console.log(findData[0])
+
+        // 否则修改数据
+        const insert = `update users set userName='${userName}' where userId='${req.session.userId}'`
+        execTrans([getSql(insert, '')], (err, data) =>{
+
+            if(err) return res.json({"msg": "操作失败", "code": 500})
+    
+            res.json({"msg": "修改成功", "code": 200})
+    
+        })
 
     })
 })
@@ -273,14 +315,11 @@ router.post('/up_title', (req, res) =>{
 
 })
 
-
-
 // 获取视频集合相关内容
 router.get('/get_course', (req, res) =>{
 
-    const { courseId } = req.query
+    const { courseId, userId} = req.query
 
-    const userId = req.session.userId
 
     execTrans(getCourseSql(courseId, userId), (err, data) =>{
 
@@ -360,6 +399,7 @@ router.get('/get_write', (req, res) =>{
 
     const {articleUserId, articleId} = req.query
 
+
     // 更新阅读数量
     const insert1 = `UPDATE articles SET articleReader = articleReader+1 where articleId='${articleId}'`
     // 文章内容
@@ -374,13 +414,20 @@ router.get('/get_write', (req, res) =>{
                     userName from commits left join users on commits.commitUserId=users.userId 
                     WHERE commitArticleId='${articleId}';`
 
+    // 回复内容 与 回复用户
     const insert5 = `select * from replys left join users on replys.replyUserId=users.userId WHERE replyArticleId='${articleId}';`
-
+    // 回复内容 与 回复目标用户
     const insert6 = `select userName from replys left join users on replys.replyTargetId=users.userId WHERE replyArticleId='${articleId}';`
 
+
+    // 热门文章
+    let recoArticle= `select articleId, articleTitle, articleTime, userId from articles 
+                    left join users on articles.articleUserId = users.userId ORDER BY articleReader DESC limit 10`
+
+
     const sqlArr = [getSql(insert1, ''), getSql(insert2, ''), getSql(insert3, ''),
-                    getSql(insert4, ''), getSql(insert5, ''), getSql(insert6, '')]
-    
+                getSql(insert4, ''), getSql(insert5, ''), getSql(insert6, ''), getSql(recoArticle, '')]
+
     execTrans(sqlArr, (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500})
@@ -388,13 +435,11 @@ router.get('/get_write', (req, res) =>{
 
         const articleData = data[1][0]
         const userData = data[2][0]
+        const recoArticle = data[6]
 
         const commitData = handleCommit(data)
 
-
-        console.log(commitData)
-
-        res.json({"msg": "获取成功", "code":200, articleData, userData, commitData})
+        res.json({"msg": "获取成功", "code":200, articleData, userData, commitData, recoArticle})
     })
 
 })
@@ -446,7 +491,7 @@ router.post('/up_write', (req, res) =>{
 
 
 // 发表评论 以及 插入消息
-router.post('/commit', (req, res) =>{
+router.post('/commit', jwt, (req, res) =>{
 
 
     const {commitArticleId, commitContent, replyTargetId, replyCommitId} = req.body
@@ -468,7 +513,6 @@ router.post('/commit', (req, res) =>{
         insert1 = `INSERT INTO replys(replyId, replyUserId, replyTargetId, replyCommitId, replyContent, replyArticleId, replyTime) 
         VALUES('${commitId}', '${userId}', '${replyTargetId}', '${replyCommitId}', '${commitContent}', '${commitArticleId}', '${commitTime}')`
     }
-
     
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
 
@@ -483,22 +527,51 @@ router.post('/commit', (req, res) =>{
 // 获取用户的个人文章
 router.get('/get_my_write', (req, res) =>{
 
-    const {limit=0, offset=10} = req.query
-
-    const userId = req.session.userId
+    const {targetUserId, limit=0, offset=10} = req.query
 
     // 文章数据
     const insert1 = `select articleId, articleTitle, articleDraft, articleTime, articleReader, 
                     articleCommit, userId, userName from articles  left join users on articles.articleUserId = users.userId 
-                        where articleUserId='${userId}' limit ${limit*offset},${offset};`
+                        where articleUserId='${targetUserId}' limit ${limit*offset},${offset};`
     // 文章总条数
-    const insert2 = `select count(articleId) from articles WHERE articleUserId='${userId}';`
+    const insert2 = `select count(articleId) from articles WHERE articleUserId='${targetUserId}';`
 
 
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
         res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
+
+    })
+})
+// 搜索文章
+router.get('/search_write', (req, res) =>{
+
+    const {articleTitle, limit=0, offset=10} = req.query
+
+
+    let str = ''
+
+    for(let i=0; i< articleTitle.length; i++){
+        str += articleTitle[i] + '|'
+    }   
+
+    str = str.substr(0, str.length - 1)
+
+
+
+    // 文章数据
+    const insert1 = `select articleId, articleTitle, articleContent, articleTime, articleReader, 
+                    articleCommit, userId, userName from articles  left join users on articles.articleUserId = users.userId 
+                        where articleTitle REGEXP '${str}'  limit ${limit*offset},${offset};`
+    // 文章总条数
+    const insert2 = `select count(articleId) from articles WHERE articleTitle REGEXP '${str}';`
+
+
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500, searchData: []})
+        res.json({"msg": "获取成功", "code": 200, searchData: data[0], searchTotal: data[1][0]['count(articleId)']})
 
     })
 })
@@ -564,11 +637,10 @@ function getCourseSql(courseId, userId){
     let insert2 = ''
 
     switch(courseId){
-        // 获取已经发布的
+        // 获取 上传的 但是没有发布
         case '1':
-            insert1 = `select * from lists where listRelease=0 and listUserId='${userId}'`
-            insert2 = `select count(listUserId) from lists where listRelease=0 and listUserId='${userId}'`
-
+            insert1 = `select * from lists where listUserId='${userId}'`
+            insert2 = `select count(listUserId) from lists where listUserId='${userId}'`
             break
         // 获取已经发布的
         case '2':
@@ -667,8 +739,8 @@ function getId(length){
 }
 
 function jwt(req, res, next){
-    if(!req.session.userId) return res.json({"msg":"没有权限访问，请先登陆", "code": 401})
 
+    if(!req.session.userId) return res.json({"msg":"没有权限访问，请先登陆", "code": 401})
     next()
 }
 

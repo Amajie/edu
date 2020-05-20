@@ -3,7 +3,7 @@ import Router from "vue-router"
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
     routes: [
         {
             path: '/',
@@ -26,7 +26,7 @@ export default new Router({
             component: () => import('@/views/VideoPlay.vue')
         },
         {
-            path: '/person',
+            path: '/person/:targetUserId/:nav',
             name: 'Person',
             component: () => import('@/views/Person.vue')
         },
@@ -47,3 +47,9 @@ export default new Router({
         }
     ]
 })
+
+// router.beforeEach((to, from, next) =>{
+    
+// })
+
+export default router

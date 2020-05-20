@@ -96,9 +96,8 @@ export default {
     methods:{
         handleCommit(){
             const {commitArticleId, commitContent, replyUser, $Message} = this
-
+            console.log(this.$cookies.get('users'))
             if(!commitContent) return $Message.error('评论不能为空')
-
             let data = {
                 commitArticleId,
                 commitContent
@@ -112,14 +111,17 @@ export default {
                 }
             }
 
+            // 发送请求
             commit(data).then(res =>{
 
                 const {code, commitId, commitTime} = res.data
 
-                if(res.data.code === 500) return $Message.error('评论失败，请稍后再试')
-
-                this.commutSuccess(commitId, commitTime)
-                $Message.success('感谢您的评论')
+                if(res.data.code === 500){
+                    return $Message.error('评论失败，请稍后再试')
+                }else if(res.data.code === 200){
+                    this.commutSuccess(commitId, commitTime)
+                    $Message.success('感谢您的评论')
+                }
             })
         },
         // 评论成功
