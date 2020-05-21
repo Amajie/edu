@@ -73,12 +73,12 @@ router.get('/get_user', (req, res) =>{
 
 // 更新用户 的信息 除了头像
 router.post('/update_user', (req, res) =>{
-    let {setVal, setKey}  = req.body
+    let {setVal, setKey, userId}  = req.body
 
     // 如果是密码 需要md5 加密
     setVal = setKey === 'userCode'? md5(setVal): setVal
 
-    const insert = `update users set ${setKey}='${setVal}' where userId='${req.session.userId}'`
+    const insert = `update users set ${setKey}='${setVal}' where userId='${userId}'`
 
     execTrans([getSql(insert, '')], (err, data) =>{
 
@@ -92,7 +92,7 @@ router.post('/update_user', (req, res) =>{
 // 更新用户名字
 router.post('/update_name', (req, res) =>{
 
-    let {userName}  = req.body
+    let {userName, userId}  = req.body
 
     execTrans([getSql(`select userName from users where userName='${userName}';`, '')], (err, findData) =>{
 
@@ -100,11 +100,9 @@ router.post('/update_name', (req, res) =>{
         // 用户名存在
         if(findData[0].length) return res.json({"msg": "用户名存在", "code": 0})
 
-        console.log(findData[0].length)
-        console.log(findData[0])
 
         // 否则修改数据
-        const insert = `update users set userName='${userName}' where userId='${req.session.userId}'`
+        const insert = `update users set userName='${userName}' where userId='${userId}'`
         execTrans([getSql(insert, '')], (err, data) =>{
 
             if(err) return res.json({"msg": "操作失败", "code": 500})
@@ -184,12 +182,11 @@ router.post('/insert_video', (req, res) =>{
 
 
 // 创建视频集
-router.post('/set_title', (req, res) =>{
+router.post('/set_list', (req, res) =>{
 
-    const listUserId = req.session.userId
+
     const listId = getId()
-    const posterUrl = `/${listUserId}/poster`
-
+    const posterUrl = `/poster`
 
     // 上传 封面 图片
     new multiparty.Form({uploadDir: path.resolve(__dirname, `../upVideo/${posterUrl}`)}).parse(req, function(err, fields, files){
@@ -204,6 +201,7 @@ router.post('/set_title', (req, res) =>{
         let [listDirection] = fields.listDirection
         let [listTitle] = fields.listTitle
         let [listGrade] = fields.listGrade
+        let [listUserId] = fields.listUserId
 
         
         // C:\vsCode\edu\server\upVideo\soqhusclecw0000000\poster\xtMn528Vd4adhhzK4UblUK92.jpg
@@ -223,21 +221,20 @@ router.post('/set_title', (req, res) =>{
 })
 
 // 对视频进行评论
-router.post('/insert_video_commit', jwt, (req, res) =>{
+router.post('/insert_video_commit', (req, res) =>{
     
-    const {commitListId, commitRate, commitVideo, commitContent} = req.body
-
-    const commitUserId = req.session.userId
-
+    const {commitListId, commitUserId, commitRate, commitVideo, commitContent} = req.body
 
 
     // 插入数据
-    const insert = `insert into listcommits(commitId, commitListId, commitUserId, commitContent, commitRate, commitVideo, commitTime) 
+    const insert1 = `insert into listcommits(commitId, commitListId, commitUserId, commitContent, commitRate, commitVideo, commitTime) 
                     values('${getId()}','${commitListId}', '${commitUserId}', '${commitContent}', '${commitRate}', '${commitVideo}', '${Date.now()}')`
 
-    execTrans([getSql(insert, '')], err =>{
+    const insert2 = `update lists set listCommit=listCommit+1 WHERE listId='${commitListId}';`
 
-        if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], err =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
 
         res.json({"msg": "操作成功", "code":200})
     })
@@ -278,7 +275,7 @@ router.get('/get_vdetail', (req, res) =>{
     const {listId, commit} = req.query
 
     // 获取最新的数据
-    let listDetail = `select listTitle, listClick, listDesc, listPoster, listType, listDirection, listGrade, listTime,
+    let listDetail = `select listTitle, listClick, listCollect, listDesc, listPoster, listType, listDirection, listGrade, listTime,
                     userId, userEmail, userName from lists  left join users on lists.listUserId = users.userId  WHERE listId='${listId}';`
     // 视频
     let videoDetail = `select * from videos where videoListId='${listId}';`
@@ -286,25 +283,30 @@ router.get('/get_vdetail', (req, res) =>{
     let sqlArr = [getSql(listDetail, ''), getSql(videoDetail, '')]
 
     if(commit){
-        // 评论 前三条数据即可
+        // 评论 前三条数据即可 修改视频点击量
         let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
                     commitTime, commitUserId, commitVideo, userId, userName from listCommits left 
                     join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit 3;`
-        sqlArr.push(getSql(commitDetail, ''))
+       
+        sqlArr = [...sqlArr, getSql(commitDetail, '')]
+    }else{
+         // 修改点击量
+        let listClick = `update lists set listClick=listClick+1 WHERE listId='${listId}';`
+
+        sqlArr = [...sqlArr, getSql(listClick, '')]
     }
 
 
     execTrans(sqlArr, (err, detailData) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, detailData: []})
-
         res.json({"msg": "获取成功", "code":200, detailData})
     })
 
 })
 
 // 更新视频 集合
-router.post('/up_title', (req, res) =>{
+router.post('/up_list', (req, res) =>{
 
     execTrans(getUpdateSql(req.body), (err, data) =>{
 
@@ -321,7 +323,7 @@ router.get('/get_course', (req, res) =>{
     const { courseId, userId} = req.query
 
 
-    execTrans(getCourseSql(courseId, userId), (err, data) =>{
+    execTrans(getCourseSql(req.query), (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, courseData: [], courseTotal: 0})
 
@@ -349,8 +351,7 @@ router.get('/search_video', (req, res) =>{
 // 博客图片上传
 router.post('/up_blog_pic', (req, res) =>{
 
-    const listUserId = req.session.userId
-    const posterUrl = `/${'soqhusclecw0000000'}/blog`
+    const posterUrl = `/blog`
 
 
     // 上传 封面 图片
@@ -376,13 +377,22 @@ router.post('/up_blog_pic', (req, res) =>{
 // 写文章
 router.post('/write', (req, res) =>{
 
-    // const userId = req.session.userId
-    const userId = '1'
+    const {articleId, articleTitle, articleContent, articleDraft, userId} = req.body
 
-    const {articleTitle, articleContent, articleDraft} = req.body
-
-    const insert = `insert into articles(articleId, articleUserId, articleTitle, articleContent, articleDraft, articleTime) 
+    let insert = ''
+    // 编辑文章
+    if(articleId){
+        insert = `update articles set articleTitle='${articleTitle}', articleContent='${articleContent}, 
+                    articleDraft='${articleDraft} where articleId='${articleId}'`
+    // 写文章
+    }else{
+        insert = `insert into articles(articleId, articleUserId, articleTitle, articleContent, articleDraft, articleTime) 
                     values('${getId()}', '${userId}', '${articleTitle}', '${articleContent}', '${articleDraft}', '${Date.now()}')`
+    }
+
+    console.log(insert)
+    return res.json({"msg": "操作失败", "code": 500})
+    
     
     execTrans([getSql(insert, '')], err =>{
 
@@ -491,15 +501,15 @@ router.post('/up_write', (req, res) =>{
 
 
 // 发表评论 以及 插入消息
-router.post('/commit', jwt, (req, res) =>{
+router.post('/commit', (req, res) =>{
 
 
-    const {commitArticleId, commitContent, replyTargetId, replyCommitId} = req.body
+    const {commitArticleId, commitContent, replyTargetId, replyCommitId, userId} = req.body
     
     
+    // 获取 评论id 以及评论时间 需要返回给前端
     const commitId =  getId()
     const commitTime =  getTime()
-    const userId =  req.session.userId
 
     // 评论
     let insert1 = `INSERT INTO commits(commitId, commitUserId, commitArticleId, commitContent, commitTime) 
@@ -530,7 +540,7 @@ router.get('/get_my_write', (req, res) =>{
     const {targetUserId, limit=0, offset=10} = req.query
 
     // 文章数据
-    const insert1 = `select articleId, articleTitle, articleDraft, articleTime, articleReader, 
+    const insert1 = `select articleId, articleTitle, articleContent, articleDraft, articleTime, articleReader, 
                     articleCommit, userId, userName from articles  left join users on articles.articleUserId = users.userId 
                         where articleUserId='${targetUserId}' limit ${limit*offset},${offset};`
     // 文章总条数
@@ -541,6 +551,94 @@ router.get('/get_my_write', (req, res) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
         res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
+
+    })
+})
+
+// 获取用户 收藏视频
+router.get('/get_collect_video', (req, res) =>{
+
+    const {targetUserId, limit=0, offset=10} = req.query
+
+    const insert1 = `select * from lists where listCollect like '%${targetUserId}%' limit ${limit*offset},${offset};`
+
+    const insert2 = `select count(listUserId) from lists WHERE  listCollect like '%${targetUserId}%';`
+
+
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500, courseData: [], courseTotal: 0})
+
+        res.json({"msg": "获取成功", "code":200, courseData: data[0], courseTotal: data[1][0]['count(listUserId)']})
+
+    })
+})
+// 获取用户 收藏文章
+router.get('/get_collect_write', (req, res) =>{
+
+    const {targetUserId, limit=0, offset=10} = req.query
+
+    // 文章数据
+    const insert1 = `select articleId, articleTitle, articleDraft, articleTime, articleReader, 
+                    articleCommit, collectList, userId, userName from articles  left join users on articles.articleUserId = users.userId 
+                        where collectList like '%${targetUserId}%' limit ${limit*offset},${offset};`
+    // 文章总条数
+    const insert2 = `select count(articleId) from articles WHERE  collectList like '%${targetUserId}%';`
+
+
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
+        res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
+
+    })
+})
+
+
+// 取消收藏文章
+router.post('/re_collect_write', (req, res) =>{
+
+    const {targetUserId, articleId} = req.body
+
+    const insert1 = `update articles set collectList=replace(collectList,'${targetUserId}|', '') WHERE articleId='${articleId}';`
+
+
+    execTrans([getSql(insert1, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+
+        res.json({"msg": "操作成功", "code": 200})
+
+    })
+})
+// 取消收藏视频
+router.post('/re_collect_video', (req, res) =>{
+
+    const {targetUserId, listId} = req.body
+
+    const insert = `update lists set listCollect=replace(listCollect,'${targetUserId}|', '') WHERE listId='${listId}';`
+
+    execTrans([getSql(insert, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+
+        res.json({"msg": "操作成功", "code": 200})
+
+    })
+})
+
+// 删除文章
+router.post('/de_collect_write', (req, res) =>{
+
+    const {articleId} = req.body
+
+    const insert1 = `delete from articles WHERE articleId='${articleId}';`
+
+    execTrans([getSql(insert1, '')], (err, data) =>{
+
+        if(err) return res.json({"msg": "操作失败", "code": 500})
+
+        res.json({"msg": "操作成功", "code": 200})
 
     })
 })
@@ -632,26 +730,29 @@ function searchVideo({ listType, listGrade, listTitle, listNew, limit=0, offset=
 
 
 // 根据 courseId返回相应的 sql语句 这里都是查询
-function getCourseSql(courseId, userId){
+function getCourseSql({ courseId, userId, limit=0, offset=5}){
+
     let insert1 = ''
     let insert2 = ''
 
     switch(courseId){
         // 获取 上传的 但是没有发布
         case '1':
-            insert1 = `select * from lists where listUserId='${userId}'`
+            insert1 = `select * from lists where listUserId='${userId}' limit ${limit*offset},${offset};`
             insert2 = `select count(listUserId) from lists where listUserId='${userId}'`
             break
-        // 获取已经发布的
+        // 非用户自己访问 只能访问已经发布的
         case '2':
-
-            insert1 = `select * from lists where listRelease=1 and listUserId='${userId}'`
+            insert1 = `select * from lists where listRelease=1 and listUserId='${userId}' limit ${limit*offset},${offset};`
             insert2 = `select count(listUserId) from lists where listRelease=1 and listUserId='${userId}'`
-
+            break
+        // 获取已经发布的
+        case '3':
+            insert1 = `select * from lists where listCollect like '%${userId}%' limit ${limit*offset},${offset};`
+            insert2 = `select count(listUserId) from lists WHERE  listCollect like '%${userId}%';`
             break
         // 默认 获取的是视频集合标题
         default:
-
             insert1 = `select listId, listTitle, listUserId from lists where listUserId='${userId}'`
             insert2 = `select count(listUserId) from lists where listUserId='${userId}'`
             break
@@ -663,7 +764,7 @@ function getCourseSql(courseId, userId){
 // 根据 updateId 更新视频集 相关信息
 function getUpdateSql(body){
     // 获取数据
-    const {updateId, listId, listDesc} = body
+    const {updateId, userId, listId, listDesc} = body
 
     let insrt1 = ''
     
@@ -672,12 +773,24 @@ function getUpdateSql(body){
         case 1:
             insert1 = `update lists set listDesc='${listDesc}', listRelease=${updateId} where listId='${listId}'`
             break
+        // 更新评论
+        case 2:
+            insert1 = `update lists set listCommit = listCommit+1 where listId='${listId}'`
+            break
+        // 更新点击量
+        case 3:
+            insert1 = `update lists set listClick = listClick+1 where listId='${listId}'`
+            break
+        // 更新收藏
+        case 4:
+            insert1 = `update lists set listCollect = CONCAT(listCollect, '${userId}|') where listId='${listId}'`
+            break
         // 默认 更新视频集
         default:
             insert1 = `update lists set listDesc='${listDesc}', listRelease=${updateId} where listId='${listId}'`
             break
     }
-
+    console.log(insert1)
     return [getSql(insert1, '')]
 }
 
@@ -737,12 +850,5 @@ function getTime(){
 function getId(length){
     return Number(Math.random().toString().substr(3,length) + Date.now()).toString(36);
 }
-
-function jwt(req, res, next){
-
-    if(!req.session.userId) return res.json({"msg":"没有权限访问，请先登陆", "code": 401})
-    next()
-}
-
 
 module.exports = router

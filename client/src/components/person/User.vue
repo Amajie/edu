@@ -128,7 +128,8 @@ export default {
             // 发送请求
             updateUser({
                 setVal: value,
-                setKey: key
+                setKey: key,
+                userId: users.userId
             }).then(res =>{
 
                 handleData(res.data, key, value)
@@ -137,7 +138,6 @@ export default {
         },
         // 修改用户名
         changeUsersName(){
-
 
             const {users, userName, $Modal, $Message, handleData} = this
 
@@ -156,7 +156,8 @@ export default {
             
             // 发送请求
             updateName({
-                userName
+                userName,
+                userId: users.userId
             }).then(res =>{
                 handleData(res.data, 'userName', userName)
             })

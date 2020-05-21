@@ -33,14 +33,18 @@
                                     操作
                                     <Icon type="ios-arrow-down"></Icon>
                                 </Button>
-                                <DropdownMenu slot="list">
+                                <DropdownMenu v-show="!activeIndex" slot="list">
                                     <DropdownItem>视频详情</DropdownItem>
-                                    <DropdownItem>删除视频</DropdownItem>
-                                    <DropdownItem @click.native="showModal(item, index)">{{item.listRelease === 0? '我要发布': '编辑简介'}}</DropdownItem>
+                                    <DropdownItem v-if="isUser" >删除视频</DropdownItem>
+                                    <DropdownItem v-if="isUser" @click.native="showModal(item, index)">{{item.listRelease === 0? '我要发布': '编辑简介'}}</DropdownItem>
+                                </DropdownMenu>
+                                <DropdownMenu v-show="activeIndex === 1" slot="list">
+                                    <DropdownItem>视频详情</DropdownItem>
+                                    <DropdownItem v-if="isUser" @click.native="reCollect(item.listId, index)">取消收藏</DropdownItem>
                                 </DropdownMenu>
                             </Dropdown>
                         </div>
-                        <div :class="['pro', {success: item.listRelease === 1}]">
+                        <div v-show="!activeIndex" :class="['pro', {success: item.listRelease === 1}]">
                             <span>
                                 {{item.listRelease === 0? '未发布': '已发布'}}
                             </span>
@@ -49,7 +53,7 @@
                 </ul>
             </div>
             <div v-if="courseTotal" class="page">
-                <Page :current="limit" :total="courseTotal*10" simple />
+                <Page @on-change="handlePage" :current="limit" :total="courseTotal*10" simple />
             </div>
         </div>
         <NoData v-else />
@@ -81,7 +85,7 @@
 
 import NoData  from '@/components/com/NoData.vue'
 
-import {getCourse, upTitle} from '@/axios/index'
+import {getCourse, upList, getCollectVideo, reCollectVideo} from '@/axios/index'
 
 export default {
     data(){
@@ -95,41 +99,51 @@ export default {
             listIndex: '', // 编辑简介视频集 索引
             limit: 1,
             offset: 5,
-            courseId: 1
+            courseId: 1,
+            users: {},
+            isUser: false
         }
     },
     created(){
+
         // 获取用户的id
-        const {targetUserId} = this.$route.params
-        this.targetUserId = targetUserId
+        this.targetUserId = this.$route.params.targetUserId
         
         const {activeIndex, sendRequest, sendCollect, $store} = this
-        const users = this.$cookies.get('users')
+
+        // 获取users
+        this.users = this.$cookies.get('users')
+
+
+        if(this.users && this.users.userId === this.targetUserId){
+            this.isUser = true
+        }
 
         if(this.activeIndex === 0){
-
-            // 如果users 不存在 或者 不是用户自己访问 则不能获取未发布的的视频
+            // 如果不是用户本人 则不能获取未发布的的视频
             // 设置 courseId = =2 即可
-            this.courseId = users && users.userId === targetUserId? 1: 2
-
-            // 发送请求
-            sendRequest()
+            this.courseId = this.isUser? 1: 2
         }else{
-            sendCollect()
+            // 获取收藏
+            this.courseId = 3
         }
+
+         // 发送请求
+        sendRequest()
     },
     methods:{
         handleclose(){
             this.descModal = false
             this.listDesc = ''
         },
+
         // 发布视频
         handleSubmit(){
             const {courseData, listDesc, listIndex, courseTotal, $Message, listId} = this
             // 内容为空
             if(!listDesc) return $Message.warning('请输入相关简介')
 
-            upTitle({
+            upList({
                 listId, listDesc, updateId: 1
             }).then(res =>{
 
@@ -145,6 +159,7 @@ export default {
 
             })
         },
+
         // 发送请求获取数据
         sendRequest(){
 
@@ -165,9 +180,57 @@ export default {
                 }
             })
         },
-        // 获取收藏的
-        sendCollect(){
-            console.log('搜藏')
+
+        // 取消收藏
+        reCollect(listId, index){
+            const {targetUserId, courseId, users, handleReDe, $Modal} = this
+
+            $Modal.confirm({
+                title: '提示',
+                content: '再犹豫一下吧，我的内容还是很好的',
+                cancelText: '取消',
+                okText: '确认',
+                onOk: () =>{
+                    reCollectVideo({
+                        listId,
+                        targetUserId: users.userId
+                    }).then(res =>{
+                        handleReDe(res.data.code, index)
+                    })
+                }
+            })
+        },
+
+        // 处理 取消收藏 和删除文章请求结果
+        handleReDe(code, index){
+
+            const {limit, courseTotal, sendRequest, courseData, $Message} = this
+
+            // 失败
+            if(code === 500) return $Message.error('操作失败，请稍后再试')
+            
+            // 删除本地数据
+            courseData.splice(index, 1)
+            $Message.success('取消成功')
+
+            // 此时当前页 没有数据 
+            // 恰好 当前页 不等于1 此时需要前往上一页
+            // 恰好 当前页 等于 1 此时需要重新获取数据g
+            if(!courseData.length){
+                if(limit != 1){
+                    this.limit = limit - 1
+                    sendRequest()
+                }else if(courseTotal != 1){
+                    // 发送数据
+                    sendRequest()
+                }
+            }
+        },
+
+        // 处理分页
+        handlePage(limit){
+            this.limit = limit
+            this.sendRequest()
         },
         // 显示 简介 对话框
         showModal({listId}, listIndex){

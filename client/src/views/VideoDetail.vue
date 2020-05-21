@@ -21,7 +21,7 @@
                         <div class="video-btn">
                             <span @click="toPlay(0)" class="study">开始学习</span>
                             <span class="download">课件下载</span>
-                            <span class="collect">收藏视频</span>
+                            <span @click="listCollect" class="collect">{{collectFlag ? '已收藏' :'收藏视频'}}</span>
                             <span class="tel">联系老师</span>
                         </div>
                     </div>
@@ -125,8 +125,8 @@
 import Navbar from '@/components/com/Navbar.vue'
 import Footerbar from '@/components/com/Footerbar.vue'
 
-import {getVdetail} from '@/axios/index.js'
-
+import {getVdetail, upList} from '@/axios/index.js'
+import {mapState} from 'vuex'
 export default {
     name: 'vdetail',
     data(){
@@ -149,9 +149,37 @@ export default {
             this.commitData = detailData[2]
         })
     },
+    computed:{
+        ...mapState(['users']),
+        collectFlag(){
+            // listCollect 不存在 即为没有收藏
+            const listCollect = this.listData.listCollect
+            return listCollect && listCollect.indexOf(this.users.userId) != -1
+        }
+    },
     methods:{
         toPlay(index){
             this.$router.push(`/play/${this.listId}/${index + 1 }`)
+        },
+        // 搜藏视频
+        listCollect(){
+            const {collectFlag, listId, users, listData} = this
+            // 说明已经收藏
+            if(collectFlag) return console.log('重复')
+
+            // 否则更新收藏
+            upList({
+                updateId: 4,
+                listId,
+                userId: users.userId
+            }).then(res =>{
+
+                if(res.data.code === 500) return this.$Message.error('收藏失败，请稍后再试！')
+
+                this.$Message.success('收藏成功')
+                // 设置数据
+                listData.listCollect = `${listData.listCollect + users.userId}|`
+            })
         }
     },
     components:{

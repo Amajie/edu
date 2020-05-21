@@ -95,7 +95,7 @@ export default {
         },
         // 发表评论
         handleCommit(){
-            const {commitContent, commitRate, $Message, videoIndex, listId} = this
+            const {commitContent, commitRate, $Message, $store, videoIndex, listId} = this
 
             if(!commitContent) return $Message.info('请输入评论内容')
             if(!commitRate) return $Message.info('请选择评分哟')
@@ -104,6 +104,7 @@ export default {
             insertVideoCommit({
                 commitContent, 
                 commitRate,
+                commitUserId: $store.state.users.userId,
                 commitVideo: videoIndex + 1, 
                 commitListId: listId
             }).then(res =>{

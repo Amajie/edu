@@ -31,6 +31,7 @@
         <div class="write-btn">
             <Button type="primary" @click.native="handleWrite(1)" danger>点击提交</Button>
             <Button type="primary" @click.native="handleWrite(0)">保存草稿</Button>
+            <Button type="error" v-if="articleId" @click.native="handleReEdit">取消编辑</Button>
         </div>
     </div>
 </template>
@@ -50,6 +51,7 @@ export default {
     data(){
         return {
             picUrl: '',
+            articleId: '',
             articleTitle: '',
             articleContent: '',
             editorOption: {
@@ -73,9 +75,25 @@ export default {
             }
         }
     },
+    created(){
+        let articleEdit  = sessionStorage.getItem('editArticle')
+        
+        if(articleEdit){
+            articleEdit = JSON.parse(articleEdit)
+            this.articleId = articleEdit.articleId
+            this.articleContent = articleEdit.articleContent
+            this.articleTitle = articleEdit.articleTitle
+        }  
+
+    },
+    beforeDestroy(){
+        // 当组件销毁时 删除
+        sessionStorage.removeItem('editArticle')
+    },
     methods:{
+        // 发送请求
         handleWrite(articleDraft){
-            const { articleTitle, articleContent, $Message, $Modal} = this
+            const { userId, articleTitle, articleId, articleContent, $Message, $Modal} = this
 
             // 内容为空 提示用户
             if(!articleTitle) return $Message.info('请输入标题')
@@ -85,9 +103,10 @@ export default {
             write({
                 articleTitle,
                 articleContent,
-                articleDraft
+                articleDraft,
+                articleId,
+                userId
             }).then(res =>{
-                
 
                 let content = '提交成功'
 
@@ -107,16 +126,14 @@ export default {
                         }
                     }
                 })
-
-
-                // 成功
-                this.articleTitle = ''
-                this.articleContent = ''
-                this.picUrl = ''
-
             })
-
-
+        },
+        // 取消编辑
+        handleReEdit(){
+            this.articleId = ''
+            this.articleContent = ''
+            this.articleTitle = ''
+            this.picUrl = ''
         },
         // 选择图片的时候 需要选点击上传的位置
         // 此时是会触发 两次 但是无关紧要
@@ -181,7 +198,14 @@ export default {
 
     components:{
         quillEditor
+    },
+    props:{
+        userId: {
+            type: String,
+            default: ''
+        }
     }
+    
 
 }
 </script>

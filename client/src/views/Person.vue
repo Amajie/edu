@@ -48,7 +48,7 @@
                                 v-for="(item, index) in navList"
                                 :key="index"
                                 :title="item.title"
-                                @click="handleNav(item, index)" 
+                                @click="handleNav(index)" 
                                 :class="{active: activeIndex === index}"> 
                                 <i class="icon iconfont" v-html="item.icon"></i>
                                 <span>{{item.title}}</span>
@@ -56,7 +56,7 @@
                         </ul>
                     </div>
                     <div class="show">
-                        <components :targetUserId="targetUserId" :is="childComponent"></components>
+                        <components :userId="users.userId" :targetUserId="targetUserId" :is="childComponent"></components>
                     </div>
                 </div>
             </div>
@@ -117,12 +117,13 @@ export default {
     },
     methods: {
         // 处理 点击nav 跳转
-        handleNav({component}, index){
+        handleNav(index){
+
             // 设置当前索引
             this.activeIndex = index
 
             // 设置当前显示的组件
-            this.childComponent = component
+            this.childComponent = this.navList[index].component
             // 路由跳转
             this.$router.replace(`/person/${this.targetUserId}/${index}`)
         }

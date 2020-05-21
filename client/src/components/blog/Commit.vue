@@ -80,7 +80,9 @@
 </template>
 
 <script>
+
 import {commit} from '@/axios/index.js'
+
 export default {
     name: 'blog',
     data(){
@@ -95,12 +97,14 @@ export default {
     },
     methods:{
         handleCommit(){
-            const {commitArticleId, commitContent, replyUser, $Message} = this
-            console.log(this.$cookies.get('users'))
+            const {commitArticleId, commitContent, replyUser, $Message, $store} = this
+            
             if(!commitContent) return $Message.error('评论不能为空')
+
             let data = {
                 commitArticleId,
-                commitContent
+                commitContent,
+                userId: $store.state.users.userId
             }
 
             if(replyUser){

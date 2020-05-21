@@ -101,9 +101,6 @@ export default {
                     this.collectList += `${users.userId}|`
                 }
             })
-        },
-        initSearch(){
-
         }
     },
 

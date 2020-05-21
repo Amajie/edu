@@ -157,8 +157,11 @@
 
 <script>
 
-import {setTitle, getCourse, insertVideo} from '@/axios/index'
+
+import {setList, getCourse, insertVideo} from '@/axios/index'
 import axios from 'axios'
+import {mapState} from 'vuex'
+
 export default {
     data(){
         return {
@@ -202,9 +205,27 @@ export default {
         }
     },
     created(){
-        getCourse().then(res =>{
+        console.log(this.users)
+        getCourse({
+            userId: this.users.userId
+        }).then(res =>{
             this.courseData = res.data.courseData
         })
+    },
+    computed:{
+        ...mapState([
+            'users'
+        ]),
+         progressWidth(){
+            
+            // 如果为 0 表示没上传文件 返回 0 即可
+            if(!this.fileSize) return 0
+            // 否则 获取百分比 this.currentLoad 为当前下载量 this.fileSize为视频大小
+            const progressNum = (Math.round(this.currentLoad/this.fileSize*100)/100)*100
+            // 这里需要注意 总的 currentLoad 是比 file.size大的
+            // 因此这里四舍五入  有可能 会超过百分之百 因此这里判断 有没有超过 100
+            return (progressNum < 100? progressNum.toString().split('.')[0]: 100) + '%'     
+        }
     },
     methods:{
 
@@ -340,7 +361,8 @@ export default {
         // 创建视频集合
         handleTitle(){
 
-            const {listTitle, listPoster, listGrade, listType, listDirection, $Message} =this
+            const {users, listTitle, listPoster, listGrade, listType, 
+                    listDirection, $Message} =this
 
             if(!listType) return $Message.warning('请选择分类')
             if(!listDirection) return $Message.warning('请选择方向')
@@ -358,9 +380,10 @@ export default {
             formData.append('listGrade', listGrade)
             formData.append('listType', listType)
             formData.append('listDirection', listDirection)
+            formData.append('listUserId', users.userId)
 
             // 发送请求
-            setTitle(formData).then(res=>{
+            setList(formData).then(res=>{
 
                 const {code, title} = res.data
 
@@ -383,10 +406,7 @@ export default {
 
             this.listPoster = ev.target.files[0]
             const WURL = window.URL || window.webkitURL || window.mozURL
-            
             this.showPoster = WURL.createObjectURL(this.listPoster)
-
-
         },
         // modal关闭回调
         handleclose(){
@@ -398,7 +418,9 @@ export default {
         },
         // 再次获取数据
         getTitle(){
-             getTitle().then(res =>{
+             getCourse({
+                 userId: this.users.userId
+             }).then(res =>{
 
                 const courseData = res.data.courseData
 
@@ -425,18 +447,6 @@ export default {
             this.listId = listId
             // 关闭
             this.titleFlag = false
-        }
-    },
-    computed:{
-        progressWidth(){
-            
-            // 如果为 0 表示没上传文件 返回 0 即可
-            if(!this.fileSize) return 0
-            // 否则 获取百分比 this.currentLoad 为当前下载量 this.fileSize为视频大小
-            const progressNum = (Math.round(this.currentLoad/this.fileSize*100)/100)*100
-            // 这里需要注意 总的 currentLoad 是比 file.size大的
-            // 因此这里四舍五入  有可能 会超过百分之百 因此这里判断 有没有超过 100
-            return (progressNum < 100? progressNum.toString().split('.')[0]: 100) + '%'     
         }
     },
     watch:{
