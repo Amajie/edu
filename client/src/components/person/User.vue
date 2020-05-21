@@ -67,7 +67,7 @@
 
 <script>
 
-import {updateUser, updateName, getUser} from '@/axios/index'
+import {updateUser, updateName} from '@/axios/index'
 import { mapState, mapMutations } from 'vuex'
 
 export default {
@@ -79,26 +79,11 @@ export default {
             userEmail: '',
             userCode: '',
             userSign: '',
-            userAddress: '',
-            userData: {}
+            userAddress: ''
         }
     },
     computed:{
         ...mapState(['users'])
-    },
-    created(){
-
-        const {targetUserId, users} = this
-
-        if(targetUserId != users.userId){
-            getUser({userId: targetUserId}).then(res =>{
-                const {code, userData} = res.data
-                if(code === 500) return console.log('服务器错误')
-                this.userData = userData
-            })
-        }else{
-            this.userData = users
-        }
     },
     methods:{
 
@@ -107,7 +92,6 @@ export default {
         ]),
         // 修改用户信息
         changeUsers(key){
-
 
             const {users, $Modal, $Message, handleData} = this
 
@@ -183,6 +167,10 @@ export default {
         }
     },
     props:{
+        userData: {
+            type: Object,
+            default: () =>({})
+        },
         targetUserId: {
             type: String,
             default: ''

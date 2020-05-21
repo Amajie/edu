@@ -6,8 +6,11 @@
             <div class="person-info">
                 <div class="info">
                     <div class="user-pic">
-                        <img class="avatar" src="./imgs/user_avatar.jpg">
-                        <img class="concer" src="./imgs/concern.png">
+                        <img class="avatar" title="点击更换头像" src="./imgs/user_avatar.jpg">
+                        <div v-if="targetUserId != users.userId" class="concer">
+                            <img v-if="!fansFlag" title="关注他吧" @click="handleFans" src="./imgs/concern.png">
+                            <img v-else title="已关注" src="./imgs/concern-active.png">
+                        </div>
                     </div>
                     <div class="user-desc">
                         <div class="user-desc-wrap">
@@ -18,11 +21,11 @@
                                 
                                 <div class="concer">
                                     <div class="c">
-                                        <em>234</em>
+                                        <em>{{concernTotal}}</em>
                                         <span>关注</span>
                                     </div>
                                     <div class="f">
-                                        <em>1000</em>
+                                        <em>{{userData.userFans | filterNum}}</em>
                                         <span>粉丝</span>
                                     </div>
                                 </div>
@@ -56,7 +59,12 @@
                         </ul>
                     </div>
                     <div class="show">
-                        <components :userId="users.userId" :targetUserId="targetUserId" :is="childComponent"></components>
+                        <components
+                            v-if="showChild" 
+                            :userData="userData"
+                            :userId="users.userId" 
+                            :targetUserId="targetUserId" 
+                            :is="childComponent"></components>
                     </div>
                 </div>
             </div>
@@ -74,9 +82,10 @@ import User from '@/components/person/User.vue'
 import MyCourse from '@/components/person/MyCourse.vue'
 import MyEssay from '@/components/person/MyEssay.vue'
 import Essay from '@/components/person/Essay.vue'
+import Fans from '@/components/person/Fans.vue'
 
-import {mapState} from 'vuex'
-
+import {mapState, mapMutations} from 'vuex'
+import {updateUser, getUser} from '@/axios/index.js'
 export default {
     name: 'person',
     data(){
@@ -86,25 +95,50 @@ export default {
                 {title: '课程中心', icon: '&#xeb99;', component: MyCourse},
                 {title: '文章中心', icon: '&#xeb99;', component: MyEssay},
                 {title: '创作文章', icon: '&#xeb99;', component: Essay},
-                {title: '关注粉丝', icon: '&#xeb99;', component: User}
+                {title: '关注粉丝', icon: '&#xeb99;', component: Fans}
             ],
             activeIndex: 0,
             childComponent: User,
             nav: '',
-            targetUserId: ''
+            targetUserId: '',
+            // 这是传给User组件的
+            userData: {},
+            showChild: false,
+            concernTotal: 0 // 关注数量
         }
     },
     created(){
 
-        const {targetUserId, nav} = this.$route.params
-        this.targetUserId = targetUserId
-        this.nav = nav
+        const {users, $route} = this
 
+        // 先获取访问目标用户的id
+        this.targetUserId = $route.params.targetUserId
+        this.nav = $route.params.nav
+
+        // 发送请求获取
+        getUser({userId: this.targetUserId}).then(res =>{
+
+            const {code, userData, concernTotal} = res.data
+            if(code === 500) return console.log('服务器错误')
+
+            // 成功
+            this.userData = userData
+            this.concernTotal = concernTotal
+            this.showChild = true
+            // 此时有可能粉丝数量有变 因此即使访问自己也要获取一次信息
+            if(this.targetUserId === users.userId){
+                // 此时有可能粉丝数量有变 因此即使访问自己也要获取一次信息
+                this.setUsers(userData)
+            }
+        })
     },
     computed:{
         ...mapState([
             'users'
-        ])
+        ]),
+        fansFlag(){
+            return this.userData.userFans && this.userData.userFans.indexOf(this.users.userId) != -1
+        }
     },
     watch:{
         nav(newNav, oldNav){
@@ -116,6 +150,7 @@ export default {
         }
     },
     methods: {
+        ...mapMutations(['setUsers']),
         // 处理 点击nav 跳转
         handleNav(index){
 
@@ -126,6 +161,29 @@ export default {
             this.childComponent = this.navList[index].component
             // 路由跳转
             this.$router.replace(`/person/${this.targetUserId}/${index}`)
+        },
+        // 关注
+        handleFans(){
+
+            const {targetUserId, users, $Message, userData} = this
+
+            // 为true 无需发送请求
+            updateUser({
+                userId: users.userId,
+                targetUserId,
+                setKey: 'userFans'
+            }).then(res =>{
+                // 失败
+                if(res.data.code === 500) return $Message.error('关注失败')
+                // 成功
+                $Message.success(`成功关注${userData.userName}`)
+
+                this.userData.userFans = `${userData.userFans + users.userId}|`
+
+                // 此时还要判断 是否 粉丝关注页面，如果在的话，需要把粉丝的数据push到粉丝列表中
+                // 或者重新获取粉丝关注数据
+
+            })
         }
     },
     components:{
@@ -169,15 +227,22 @@ export default {
                         top: 50px;
                         width: 180px;
                         height: 180px;
+                        cursor: pointer;
                         border-radius: 50%;
                     }
                     .concer{
                         position: absolute;
                         left: 180px;
                         top: 160px;
-                        width: 60px;
-                        height: 60px;
+                        width: 80px;
+                        height: 80px;
+                        cursor: pointer;
+                        overflow: hidden;
                         border-radius: 50%;
+                        > img{
+                            width: 100%;
+                            height: 100%;
+                        }
                     }
                 }
                 .user-desc{

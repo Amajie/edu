@@ -63,6 +63,11 @@ Vue.filter('dateTime', (dateTime, flag) =>{
 })
 
 
+Vue.filter('filterNum', list =>{
+  return list.split('|').filter(n => n).length
+})
+
+
 new Vue({
   router,
   store,

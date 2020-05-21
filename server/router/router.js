@@ -58,27 +58,60 @@ router.post('/register', (req, res) =>{
 // 获取用户的个人信息
 router.get('/get_user', (req, res) =>{
     const {userId} = req.query
-    // 最新文章
-    let insert = `select userAddress, userCode, userEmail, userGender, userId, userName, userSign
-                 from users where userId='${userId}';`
+    // 用户信息
+    // userAddress, userCode, userEmail, userGender, userId, userName, userSign
+    let insert1 = `select * from users where userId='${userId}';`
+    // 关注数量
+    let insert2 = `select count(userId) from users where userFans like '%${userId}%';`
 
-    execTrans([getSql(insert, '')], (err, data) =>{
+    execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500})
 
+        res.json({"msg": "获取成功", "code":200, userData: {...data[0][0], userCode: null}, concernTotal: data[1][0]['count(userId)']})
+    })
+})
 
-        res.json({"msg": "获取成功", "code":200, userData: {...data[0][0], userCode: null}})
+// 获取粉丝关注
+// 获取用户的个人信息
+router.get('/get_fans', (req, res) =>{
+
+    const {targetUserId, userFans} = req.query
+    // 关注
+    let insert1 = `select userId, userName, userSign from users where userFans like '%${targetUserId}%';`
+    let sqlArr = [getSql(insert1, '')]
+
+
+    // 存在 粉丝的的话
+    if(userFans){
+        // 粉丝
+        insert1 = `select userId, userName, userSign from users where userId REGEXP '${userFans}';`
+        sqlArr.push(getSql(insert1, ''))
+    }
+
+    execTrans(sqlArr, (err, data) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500})
+
+        res.json({"msg": "获取成功", "code":200, concerData: data[0], fansData: data[1]})
     })
 })
 
 // 更新用户 的信息 除了头像
 router.post('/update_user', (req, res) =>{
-    let {setVal, setKey, userId}  = req.body
+
+    let {setVal, setKey, userId, targetUserId}  = req.body
 
     // 如果是密码 需要md5 加密
     setVal = setKey === 'userCode'? md5(setVal): setVal
 
-    const insert = `update users set ${setKey}='${setVal}' where userId='${userId}'`
+    let insert = `update users set ${setKey}='${setVal}' where userId='${userId}'`
+
+    // 这里是关注  targetUserId 关注目标用户的id userId 自己的id
+    if(setKey === 'userFans'){
+        insert = `update users set userFans = CONCAT(userFans, '${userId}|') where userId='${targetUserId}'`
+    }
+    
 
     execTrans([getSql(insert, '')], (err, data) =>{
 

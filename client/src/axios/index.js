@@ -50,5 +50,7 @@ export const reCollectVideo = data => ajax({url: '/re_collect_video', data, meth
 export const deCollectWrite = data => ajax({url: '/de_collect_write', data, method: 'post', auth: true})
 // 搜索文章
 export const searchWrite = params => ajax({url: '/search_write', params})
+// 获取粉丝关注数据
+export const getFans = params => ajax({url: '/get_fans', params})
 
 

@@ -104,11 +104,11 @@ export default {
         }
     },
 
-    filters:{
-        filterNum(list){
-            return list.split('|').filter(n => n).length
-        }
-    },
+    // filters:{
+    //     filterNum(list){
+    //         return list.split('|').filter(n => n).length
+    //     }
+    // },
     watch:{
         articleData(newData, oldData){
             this.likeList = newData.likeList
