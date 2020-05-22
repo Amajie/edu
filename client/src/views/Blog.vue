@@ -13,12 +13,12 @@
             <!-- 推荐技术文章 -->
             <div class="blog-reco">
                 <div class="reco">
-                    <div class="write">
+                    <div @click="toWrite" class="write">
                         <span>写博客</span>
                     </div>
                     <div class="reco-reader">
                         <div class="title">
-                            <span>热门话题</span>
+                            <span>热门博文</span>
                         </div>
                         <ul>
                             <li
@@ -154,7 +154,7 @@ export default {
             this.articleId = articleId
             this.$router.replace(`/blog/${userId}/${articleId}`)
         },
-
+        // 搜索
         initSearch(){
             
             const {articleTitle, $Message} = this
@@ -174,6 +174,10 @@ export default {
                 searchTotal && (this.searchTotal = searchTotal)
 
             })
+        },
+        // 前往写博客
+        toWrite(){
+            this.$router.push(`/person/${this.users.userId}/3`)
         }
     },
     components:{

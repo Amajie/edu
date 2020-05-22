@@ -64,6 +64,10 @@ Vue.filter('dateTime', (dateTime, flag) =>{
 
 
 Vue.filter('filterNum', list =>{
+
+  // 如果 不存在 返回 0
+  if(!list) return 0
+
   return list.split('|').filter(n => n).length
 })
 

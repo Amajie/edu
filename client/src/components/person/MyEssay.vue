@@ -167,12 +167,10 @@ export default {
         },
         // 编辑文章
         handleEdArticle({articleContent, articleTitle, articleId}){
-            
             // 先保存到 sessionStorage
             sessionStorage.setItem('editArticle', JSON.stringify({articleContent, articleTitle, articleId}))
-            
 
-            this.$parent.handleNav(3)
+            this.$parent.handlePersonNav(3)
 
         },
         // 动态

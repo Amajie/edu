@@ -31,7 +31,7 @@
                             <div class="commit-content">
                                 <div class="commit-top">
                                     <div class="user-info">
-                                        <img src="../home/imgs/i1.png" />
+                                        <img :src="commit.userAvatar" />
                                         <span>{{commit.userName}}:</span>
                                     </div>
                                     <div class="time-info">
@@ -53,12 +53,12 @@
                                 >
                                     <div class="reply-top">
                                         <div>
-                                            <img src="../home/imgs/i1.png" />
+                                            <img :src="reply.replyAvatar" />
                                             <span>{{reply.replyName}}</span>
                                         </div>
                                         <span>回复</span>
                                         <div>
-                                            <img src="../home/imgs/i1.png" />
+                                            <img :src="reply.replyTargetAvatar" />
                                             <span>{{reply.replyTargetName}}</span>
                                         </div>
                                         <span class="reply-time">
@@ -130,7 +130,7 @@ export default {
         },
         // 评论成功
         commutSuccess(commitId, commitTime){
-            const {replyUser, commitContent, commitArticleId, userName, userId} = this
+            const {replyUser, commitContent, commitArticleId, userName, userAvatar, userId} = this
 
             this.commitContent = ''
 
@@ -143,18 +143,19 @@ export default {
                 commitUserId: userId,
                 replyData: [],
                 userId,
-                userName
+                userName,
+                userAvatar
             }
             // 说明是回复
             if(replyUser){
                 commit = {
                     replyArticleId: commitArticleId,
-                    replyAvatar: '',
+                    replyAvatar: userAvatar,
                     replyCommitId: replyUser.commitId,
                     replyContent: commitContent,
                     replyId: commitId,
                     replyName: replyUser.userName,
-                    replyTargetAvatar: '',
+                    replyTargetAvatar: replyUser.userAvatar,
                     replyTargetId: replyUser.userId,
                     replyTargetName: userName,
                     replyTime: commitTime,
@@ -167,16 +168,22 @@ export default {
             }
         },
         // 获取回复目标用户信息
-        getReplyInfo({commitId, userId, userName, replyCommitId, replyUserId, replyName}, index){
+        getReplyInfo({commitId, userId, userName, userAvatar, replyCommitId, replyUserId, replyName, replyAvatar}, index){
 
             // 情况评论信息
             this.commitContent = ''
             //这是回复楼主的
             if(commitId){
-                this.replyUser = {commitId, userId, userName, index}
+                this.replyUser = {commitId, userId, userName, userAvatar, index}
             // 这是回复楼主评论下面的其他用户
             }else{
-                this.replyUser = { commitId: replyCommitId, userId: replyUserId, userName: replyName, index}
+                this.replyUser = { 
+                    commitId: replyCommitId, 
+                    userId: replyUserId, 
+                    userName: replyName, 
+                    userAvatar: replyAvatar,
+                    index
+                }
             }
         }
     },
@@ -216,6 +223,10 @@ export default {
             default: ''
         },
         userId: {
+            type: String,
+            default: ''
+        },
+        userAvatar: {
             type: String,
             default: ''
         }

@@ -10,6 +10,8 @@ export const getUser = params => ajax({url: '/get_user', params})
 export const updateUser = data => ajax({url: '/update_user', data, method: 'post', auth: true})
 // 更新用户名
 export const updateName = data => ajax({url: '/update_name', data, method: 'post', auth: true})
+// 上传头像
+export const upAvatarPic = data => ajax({url: '/up_avatar_pic', data, method: 'post', auth: true})
 // 创建视频集
 export const setList = data => ajax({url: '/set_list', data, method: 'post', auth: true})
 // 更新 视频集

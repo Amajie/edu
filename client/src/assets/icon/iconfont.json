@@ -6,6 +6,48 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "584065",
+      "name": "退出",
+      "font_class": "084tuichu",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    },
+    {
+      "icon_id": "1203553",
+      "name": "用户",
+      "font_class": "linedesign-16",
+      "unicode": "e672",
+      "unicode_decimal": 58994
+    },
+    {
+      "icon_id": "4935741",
+      "name": "icon-粉丝",
+      "font_class": "icon-fensi",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "6560965",
+      "name": "课程",
+      "font_class": "kecheng",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "10693609",
+      "name": "文章查询",
+      "font_class": "wenzhangchaxun",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "11372791",
+      "name": "创作",
+      "font_class": "chuangzuo",
+      "unicode": "e8ca",
+      "unicode_decimal": 59594
+    },
+    {
       "icon_id": "1306459",
       "name": "播放",
       "font_class": "bofang",

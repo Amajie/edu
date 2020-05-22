@@ -7,6 +7,7 @@ const path = require('path')
 const multiparty = require('multiparty')
 
 const {execTrans, getSql} = require('../mysql/connect.js')
+const initAvatar = '/avatar/init_avatar.png'
 
 // 登陆 
 router.post('/login', (req, res) =>{
@@ -40,7 +41,8 @@ router.post('/register', (req, res) =>{
     const {userName, userCode} = req.body
     // 先判断用户 是否已经注册
     const userId = getId()
-    const insert1 = `insert into users(userId, userName, userCode) values('${userId}', '${userName}', '${md5(userCode)}');`
+    const insert1 = `insert into users(userId, userName, userCode, userAvatar) 
+                    values('${userId}', '${userName}', '${md5(userCode)}', '${md5(initAvatar)}');`
     const insert2 = `select * from users where userName='${userName}';`
 
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
@@ -73,19 +75,18 @@ router.get('/get_user', (req, res) =>{
 })
 
 // 获取粉丝关注
-// 获取用户的个人信息
 router.get('/get_fans', (req, res) =>{
 
     const {targetUserId, userFans} = req.query
     // 关注
-    let insert1 = `select userId, userName, userSign from users where userFans like '%${targetUserId}%';`
+    let insert1 = `select userId, userName, userSign, userAvatar from users where userFans like '%${targetUserId}%';`
     let sqlArr = [getSql(insert1, '')]
 
 
     // 存在 粉丝的的话
     if(userFans){
         // 粉丝
-        insert1 = `select userId, userName, userSign from users where userId REGEXP '${userFans}';`
+        insert1 = `select userId, userName, userSign, userAvatar from users where userId REGEXP '${userFans}';`
         sqlArr.push(getSql(insert1, ''))
     }
 
@@ -145,6 +146,40 @@ router.post('/update_name', (req, res) =>{
         })
 
     })
+})
+
+// 头像上传
+router.post('/up_avatar_pic', (req, res) =>{
+
+    const avatarUrl = `/avatar`
+
+
+    // 上传 封面 图片
+    new multiparty.Form({uploadDir: path.resolve(__dirname, `../upVideo/${avatarUrl}`)}).parse(req, function(err, fields, files){
+        
+        if(err){
+            return res.json({"msg": "上传失败", "code": 500})
+        }
+        
+        // 获取 图片信息
+        let [avatarPic] = files.avatarPic
+        let [userId] = fields.userId
+        
+        // 根据 \ 转换为数组 截取最后一个数据即可
+        avatarPic = `${avatarUrl}/${avatarPic.path.split('\\').pop()}`
+
+
+        const insert = `update users set userAvatar='${avatarPic}' where userId='${userId}'`
+
+        execTrans([getSql(insert, '')], (err, data) =>{
+
+            if(err) return res.json({"msg": "操作失败", "code": 500})
+    
+            res.json({"msg": "创建成功", "code":200, avatarPicUrl: avatarPic})
+    
+        })
+
+    })        
 })
 
 
@@ -423,10 +458,6 @@ router.post('/write', (req, res) =>{
                     values('${getId()}', '${userId}', '${articleTitle}', '${articleContent}', '${articleDraft}', '${Date.now()}')`
     }
 
-    console.log(insert)
-    return res.json({"msg": "操作失败", "code": 500})
-    
-    
     execTrans([getSql(insert, '')], err =>{
 
         if(err) return res.json({"msg": "操作失败", "code": 500})
@@ -454,13 +485,13 @@ router.get('/get_write', (req, res) =>{
 
     // 评论内容
     const insert4 = `select commitArticleId, commitContent, commitId, commitTime, commitUserId, userId, 
-                    userName from commits left join users on commits.commitUserId=users.userId 
+                    userName, userAvatar from commits left join users on commits.commitUserId=users.userId 
                     WHERE commitArticleId='${articleId}';`
 
     // 回复内容 与 回复用户
     const insert5 = `select * from replys left join users on replys.replyUserId=users.userId WHERE replyArticleId='${articleId}';`
     // 回复内容 与 回复目标用户
-    const insert6 = `select userName from replys left join users on replys.replyTargetId=users.userId WHERE replyArticleId='${articleId}';`
+    const insert6 = `select userName, userAvatar from replys left join users on replys.replyTargetId=users.userId WHERE replyArticleId='${articleId}';`
 
 
     // 热门文章
@@ -847,7 +878,7 @@ function handleCommit(data){
             if(item.commitId === reply.replyCommitId){
                 // 回复用户
                 const {replyId, replyContent, replyArticleId, 
-                        replyCommitId, replyTime, replyUserId, replyTargetId, userName} = reply
+                        replyCommitId, replyTime, replyUserId, replyTargetId, userName, userAvatar} = reply
 
                 replyObj = {
                     replyId,
@@ -856,8 +887,8 @@ function handleCommit(data){
                     replyTargetId,
                     replyName: userName,
                     replyTargetName: replyTargetData[i].userName,
-                    replyAvatar: '',
-                    replyTargetAvatar: '',
+                    replyAvatar: userAvatar,
+                    replyTargetAvatar: replyTargetData[i].userAvatar,
                     replyArticleId,
                     replyCommitId,
                     replyTime,
@@ -867,7 +898,7 @@ function handleCommit(data){
             }
         })
     })
-
+    console.log(commitData)
     return commitData
 }
 

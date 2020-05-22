@@ -9,7 +9,7 @@
                         :key="item.userId"    
                     >
                             <div class="avatar">
-                                <img src="./imgs/page_pic.png">
+                                <img :src="item.userAvatar">
                             </div>
                             <div class="desc-name">
                                 <p>{{item.userName}}</p>
@@ -28,7 +28,7 @@
                         :key="item.userId"    
                     >
                         <div class="avatar">
-                            <img src="./imgs/page_pic.png">
+                            <img :src="item.userAvatar">
                         </div>
                         <div class="desc-name">
                             <p>{{item.userName}}</p>

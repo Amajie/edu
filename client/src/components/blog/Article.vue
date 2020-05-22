@@ -16,7 +16,7 @@
                     <div class="blog-title">
                         <h2>{{articleData.articleTitle}}</h2>
                     </div>
-                    <div v-html="articleData.articleContent"></div>
+                    <div  v-html="articleData.articleContent"></div>
                 </div>
                 <div class="blog-opa">
                     <Button :ghost="!likeFlag" icon="ios-heart" @click.native="handleUpWrite(1)" type="info">
@@ -37,6 +37,7 @@
             :commitData="commitData"
             :commitArticleId="articleId"
             :userId="users.userId"
+            :userAvatar="users.userAvatar"
         ></Commit>
     </div>
 </template>
@@ -103,12 +104,6 @@ export default {
             })
         }
     },
-
-    // filters:{
-    //     filterNum(list){
-    //         return list.split('|').filter(n => n).length
-    //     }
-    // },
     watch:{
         articleData(newData, oldData){
             this.likeList = newData.likeList
