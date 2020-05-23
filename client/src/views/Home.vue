@@ -3,9 +3,9 @@
         <Navbar></Navbar>
         <div class="home-main">
             <Carousel></Carousel>
-            <Course :courseData="courseData"></Course>
+            <Course v-if="courseData.length" :courseData="courseData"></Course>
             <Technology v-if="recoArticle.length" :recoArticle="recoArticle" :newArticle="newArticle"></Technology>
-            <Videos></Videos>
+            <Videos v-if="videoData.length" :videoData="videoData"></Videos>
         </div>
         <Footerbar></Footerbar>
     </div>
@@ -28,19 +28,20 @@ export default {
         return {
             courseData: [],
             newArticle: [],
-            recoArticle: []
+            recoArticle: [],
+            videoData: []
         }
     },
     created(){
-        // console.log(localStorage.getItem('users'))
+
         getHome().then(res =>{
-            const {code, homeData, newArticle, recoArticle} = res.data
+            const {code, homeData, newArticle, recoArticle, oneVideo, twoVideo, threeVideo} = res.data
             if(code === 500) return console.log('暂无数据')
 
             this.courseData = homeData
             this.newArticle = newArticle
             this.recoArticle = recoArticle
-
+            this.videoData = [oneVideo, twoVideo, threeVideo]
         })
     },
     components:{

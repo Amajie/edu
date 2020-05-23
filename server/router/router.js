@@ -7,6 +7,8 @@ const path = require('path')
 const multiparty = require('multiparty')
 
 const {execTrans, getSql} = require('../mysql/connect.js')
+
+// 默认头像
 const initAvatar = '/avatar/init_avatar.png'
 
 // 登陆 
@@ -14,7 +16,6 @@ router.post('/login', (req, res) =>{
     // 获取参数
     const {userName, userCode} = req.body
     // 先判断用户 是否已经注册
-
     execTrans([getSql(`select * from users where userName='${userName}';`, '')], (err, data) =>{
         // 报错
         if(err) return res.json({"msg": "操作失败", "code": 500})
@@ -39,22 +40,31 @@ router.post('/login', (req, res) =>{
 router.post('/register', (req, res) =>{
     // 获取参数
     const {userName, userCode} = req.body
-    // 先判断用户 是否已经注册
+    // 获取用户id
     const userId = getId()
     const insert1 = `insert into users(userId, userName, userCode, userAvatar) 
-                    values('${userId}', '${userName}', '${md5(userCode)}', '${md5(initAvatar)}');`
+                    values('${userId}', '${userName}', '${md5(userCode)}', '${initAvatar}');`
     const insert2 = `select * from users where userName='${userName}';`
 
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
         // 报错
         if(err) return res.json({"msg": "操作失败", "code": 500})
 
+        // 此时 创建
+        mkdirsSync(userId)
         // 设置 session
         req.session.userId = data[1][0].userId
         // 数据格式 [ OkPacket {}, [ RowDataPacket {} ]
         res.json({"msg": "登陆成功", "code": 200, users: {...data[1][0], userCode: null}})
     })
 
+})
+
+
+router.get('/hj', (req, res) =>{
+    mkdirsSync('hj')
+    // hjjj
+    res.send('sadas')
 })
 
 // 获取用户的个人信息
@@ -184,13 +194,15 @@ router.post('/up_avatar_pic', (req, res) =>{
 
 
 // 用户视频上传
+// 这里不知道为什么 通过 req.body没有上传的数据 只能通过 query获取了
 router.post('/upload_video_cut', (req, res) =>{
 
+    const {userId} = req.query
     // 获取 切片文件夹 路径
-    const cutDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/cut')
+    const cutDir = path.resolve(__dirname, `../upVideo/${userId}/cut`)
+    const writeDir = path.resolve(__dirname, `../upVideo/${userId}/merge`)
 
     new multiparty.Form({uploadDir: cutDir}).parse(req, function(err, fields, files){
-
 
         if(err){
             return res.json({"msg": "上传失败", "code": 500})
@@ -201,26 +213,15 @@ router.post('/upload_video_cut', (req, res) =>{
         const [filename] = fields.filename
         const [index] = fields.index
         
-        const writeDir = path.resolve(__dirname, '../upVideo/soqhusclecw0000000/merge')
+        
         
         fs.appendFileSync(`${writeDir}/${filename}`, fs.readFileSync(chunk.path))
         // 删除文件
         fs.unlinkSync(chunk.path)
-        console.log(chunk.path)
+
         // 成功
         res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
 
-
-        // const readStream = fs.createReadStream(chunk.path)
-        // const writeStream = fs.createWriteStream(`${writeDir}/${filename}`)
-        // // 此时应该要判断 chunk.path存在与否
-        // readStream.pipe(writeStream)
-
-        // readStream.on('end', function(err, data) {
-        //     // 删除文件
-        //     fs.unlinkSync(chunk.path)
-        //     res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
-        // })
     })        
 })
 
@@ -312,10 +313,15 @@ router.post('/insert_video_commit', (req, res) =>{
 })
 
 
-// 首页获取数据
+// 获取首页数据
 router.get('/get_home', (req, res) =>{
+
+    // 获取视频需要的一些数据
+    const videoData = 'listId, listPoster, listClick, listTitle, listGrade'
+
+
     // 获取最新的数据
-    let newList = `select * from lists where listRelease=1 ORDER BY listTime DESC limit 0, 2`
+    let newList = `select ${videoData} from lists where listRelease=1 ORDER BY listTime DESC limit 0, 3`
     // 推荐文章
     let recoArticle= `select articleId, articleTitle, articleTime, userId from articles 
                     left join users on articles.articleUserId = users.userId ORDER BY articleReader DESC limit 5`
@@ -323,7 +329,15 @@ router.get('/get_home', (req, res) =>{
     let newArticle = `select articleId, articleTitle, articleTime, userId from articles 
                     left join users on articles.articleUserId = users.userId ORDER BY articleTime DESC limit 5`
 
-    const sqlArr = [getSql(newList, ''), getSql(recoArticle, ''), getSql(newArticle, '')]
+    // 初级教程
+    let oneVideo = `select ${videoData} from lists where listRelease=1 and listGrade=1 ORDER BY listTime DESC limit 1`
+    // 进阶教程
+    let twoVideo = `select ${videoData} from lists where listRelease=1 and listGrade=2 ORDER BY listTime DESC limit 1`
+    // 高级教程
+    let threeVideo = `select ${videoData} from lists where listRelease=1 and listGrade=3 ORDER BY listTime DESC limit 1`
+
+    const sqlArr = [getSql(newList, ''), getSql(recoArticle, ''), getSql(newArticle, ''),
+                    getSql(oneVideo, ''), getSql(twoVideo, ''), getSql(threeVideo, '')]
 
     execTrans(sqlArr, (err, data) =>{
 
@@ -332,8 +346,12 @@ router.get('/get_home', (req, res) =>{
         let homeData = data[0]
         let recoArticle = data[1]
         let newArticle = data[2]
+        let oneVideo = data[3]
+        let twoVideo = data[4]
+        let threeVideo = data[5]
 
-        res.json({"msg": "获取成功", "code":200, homeData, recoArticle, newArticle})
+        res.json({"msg": "获取成功", "code":200, homeData, recoArticle, newArticle,
+                            oneVideo, twoVideo, threeVideo})
     })
 
 })
@@ -344,7 +362,7 @@ router.get('/get_vdetail', (req, res) =>{
 
     // 获取最新的数据
     let listDetail = `select listTitle, listClick, listCollect, listDesc, listPoster, listType, listDirection, listGrade, listTime,
-                    userId, userEmail, userName from lists  left join users on lists.listUserId = users.userId  WHERE listId='${listId}';`
+                    userId, userName, userAvatar from lists  left join users on lists.listUserId = users.userId  WHERE listId='${listId}';`
     // 视频
     let videoDetail = `select * from videos where videoListId='${listId}';`
 
@@ -353,7 +371,7 @@ router.get('/get_vdetail', (req, res) =>{
     if(commit){
         // 评论 前三条数据即可 修改视频点击量
         let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
-                    commitTime, commitUserId, commitVideo, userId, userName from listCommits left 
+                    commitTime, commitUserId, commitVideo, userId, userName, userAvatar from listCommits left 
                     join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit 3;`
        
         sqlArr = [...sqlArr, getSql(commitDetail, '')]
@@ -902,6 +920,16 @@ function handleCommit(data){
     return commitData
 }
 
+// 同步创建文件夹
+function mkdirsSync(userId){
+    // 顺便利用 userId 这个变量
+    userId = path.resolve(__dirname, `../upVideo/${userId}`)
+
+    // 创建文件夹
+    fs.mkdirSync(userId)
+    fs.mkdirSync(userId + '/cut')
+    fs.mkdirSync(userId + '/merge')
+}
 
 // 获取时间
 function getTime(){

@@ -26,7 +26,7 @@
                                 :key="item.articleId"
                                 @click="handleNav(item)"
                             >
-                                <i class="icon iconfont">&#xeb99;</i>
+                                <img src="./imgs/hot.png" />
                                 <span>{{item.articleTitle}}</span>
                             </li>
                         </ul>
@@ -224,16 +224,18 @@ export default {
                     }
                     ul{
                         li{
-                            height: 35px;
+                            height: 36px;
                             padding: 0 3px;
                             cursor: pointer;
-                            line-height: 35px;
+                            line-height: 36px;
                             &:hover span{
                                 color: #000;
                             }
-                            i{
+                            > img{
                                 float: left;
-                                margin-right: 10px;
+                                width: 20px;
+                                height: 20px;
+                                margin: 8px 10px 0px 0px;
                             }
                             span{
                                 display: block;

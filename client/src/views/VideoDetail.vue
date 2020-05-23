@@ -34,7 +34,7 @@
                         <div class="user">
                             <div class="user-info">
                                 <div class="user-pic">
-                                    <img src="./imgs/detail.jpg">
+                                    <img :src="listData.userAvatar">
                                 </div>
                                 <div class="user-name">
                                     <h3>{{listData.userName}}</h3>
@@ -42,9 +42,6 @@
                                 </div>
                             </div>
                             <div class="user-desc">
-                                <!-- <p>
-                                    全栈工程师
-                                </p> -->
                                 <p>
                                     {{listData.userSign?listData.userSign: '空空如也，他什么也没说！！！'}}
                                 </p>
@@ -59,7 +56,7 @@
                                 >
                                     <div class="commit-user">
                                         <div class="pic">
-                                            <img src="./imgs/detail.jpg">
+                                            <img :src="commit.userAvatar">
                                         </div>  
                                         <div class="info">
                                             <div class="name">

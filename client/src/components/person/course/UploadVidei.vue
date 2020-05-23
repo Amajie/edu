@@ -232,6 +232,22 @@ export default {
         // 获取视频
         getVideo(ev){
 
+            // 没有登陆
+            if(!this.$cookies.get('users')){
+                return this.$Modal.confirm({
+                    title: '没有权限',
+                    content: '亲，请先登陆，才能继续操作',
+                    cancelText: '取消',
+                    okText: '确认',
+                    onOk: () =>{
+                        $router.replace('/login')
+                    },
+                    onCancel: () =>{
+                        this.fileSize = 0
+                    }
+                })
+            }
+
             let {cutSize, cutNum} = this
 
             const file = ev.target.files[0]
@@ -278,22 +294,6 @@ export default {
 
         // 发送 切片
         sendVideoCut(videoData){
-            
-            // 没有登陆
-            if(!this.$cookies.get('users')){
-                return this.$Modal.confirm({
-                    title: '没有权限',
-                    content: '亲，请先登陆，才能继续操作',
-                    cancelText: '取消',
-                    okText: '确认',
-                    onOk: () =>{
-                        $router.replace('/login')
-                    },
-                    onCancel: () =>{
-                        this.fileSize = 0
-                    }
-                })
-            }
 
             const formData = new FormData()
 
@@ -305,6 +305,9 @@ export default {
                 url: '/api/upload_video_cut',
                 method: 'post',
                 data: formData,
+                params:{
+                    userId: this.users.userId
+                },
                 onUploadProgress: progress =>{
 
                     let cutLoaded = progress.loaded - videoData.lastLoaded
@@ -316,6 +319,9 @@ export default {
                 }
             }).then(res =>{
                 const {code, index} = res.data
+                console.log(res.data)
+                return
+
                 if(code === 200){
                     this.cutList[index] && this.sendVideoCut(this.cutList[index])
                 }else{

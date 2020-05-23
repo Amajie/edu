@@ -155,6 +155,9 @@ export default {
                 this.courseData.splice(listIndex, 1)
                 this.courseTotal = courseTotal - 1
 
+                // 关闭简介框
+                this.descModal = false
+
                 $Message.success('发布成功')
 
             })

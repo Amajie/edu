@@ -17,7 +17,7 @@
             <slot></slot>
             <!-- 账号状态 -->
             <div class="conut">
-                <div v-if="!users" @click="handleNav('/login')" class="count-login">
+                <div v-if="!users.userId" @click="handleNav('/login')" class="count-login">
                     <span title="前往登陆">登陆</span>
                 </div>
                 <div v-else @click="handleNav(`/person/${users.userId}/0`)" class="avatar">

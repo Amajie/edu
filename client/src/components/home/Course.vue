@@ -17,78 +17,6 @@
                             <span class="title">{{item.listTitle}}</span>
                         </div>
                     </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播课</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="course-pic">
-                            <img src="./imgs/i3.jpg">
-                        </div>
-                        <div class="course-title">
-                            <span class="grade">初级</span>
-                            <span class="title">PHP开发免费公益直播</span>
-                        </div>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -97,10 +25,6 @@
 <script>
 export default {
     name: 'course',
-    created(){
-        console.log(this.courseData)
-    },
-
     props:{
         courseData: Array
     }
