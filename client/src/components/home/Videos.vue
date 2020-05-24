@@ -9,7 +9,7 @@
                         <img src="./imgs/one.jpg">
                     </div>
                     <div class="videos-wrap-right">
-                        <ul>
+                        <ul v-if="oneVideo">
                             <li
                                 v-for="index in 8"
                                 :key="index"
@@ -29,6 +29,7 @@
                                 </div>
                             </li>
                         </ul>
+                        <NoData v-else></NoData>
                     </div>
                 </div>
             </div>
@@ -40,7 +41,7 @@
                         <img src="./imgs/two.jpg">
                     </div>
                     <div class="videos-wrap-right">
-                        <ul>
+                        <ul v-if="twoVideo">
                             <li
                                 v-for="index in 8"
                                 :key="index"
@@ -60,6 +61,7 @@
                                 </div>
                             </li>
                         </ul>
+                        <NoData v-else></NoData>
                     </div>
                 </div>
             </div>
@@ -71,7 +73,7 @@
                         <img src="./imgs/three.jpg">
                     </div>
                     <div class="videos-wrap-right">
-                        <ul>
+                        <ul v-if="threeVideo">
                             <li
                                 v-for="index in 8"
                                 :key="index"
@@ -91,6 +93,7 @@
                                 </div>
                             </li>
                         </ul>
+                        <NoData v-else></NoData>
                     </div>
                 </div>
             </div>
@@ -98,6 +101,9 @@
     </div>
 </template>
 <script>
+
+import NoData from '@/components/com/NoData.vue'
+
 export default {
     name: 'videos',
     data(){
@@ -112,9 +118,9 @@ export default {
         const {videoData} = this
 
         // 因为 数据不够 所以 初级 进阶 高级 各获取一条视频，渲染十次就行了
-        this.oneVideo = videoData[0][0]
-        this.twoVideo = videoData[1][0]
-        this.threeVideo = videoData[2][0]
+        this.oneVideo = videoData[0][0] ? videoData[0][0]: ''
+        this.twoVideo = videoData[1][0] ? videoData[1][0]: ''
+        this.threeVideo = videoData[2][0] ? videoData[2][0]: ''
 
     },
     methods:{
@@ -128,7 +134,11 @@ export default {
             type: Array,
             default: () =>([])
         }
+    },
+    components:{
+        NoData
     }
+    
 }
 </script>
 

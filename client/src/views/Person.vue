@@ -200,6 +200,10 @@ export default {
 
             })
         },
+        // 在用户修改个人信息后 需要修改userData
+        setUserData(userData){
+            this.userData = userData
+        },
         // 不是本人不能点击上传头像
         selectPic(e){
             if(this.targetUserId != this.users.userId){

@@ -44,7 +44,6 @@
                             <em @click="userGender = 1" :class="{active: userGender === 1}">男</em>
                             <em @click="userGender = 2" :class="{active: userGender === 2}">女</em>
                         </div>
-                        <!-- <em class="change-gender" @click="changeUsers('userGender')">修改</em> -->
                         <span @click="changeUsers('userGender')">修改</span>
                     </li>
                     <li>
@@ -79,7 +78,8 @@ export default {
             userEmail: '',
             userCode: '',
             userSign: '',
-            userAddress: ''
+            userAddress: '',
+            cloneUsers: {}
         }
     },
     computed:{
@@ -162,8 +162,8 @@ export default {
             key === 'userCode' || setUsers({...users, [key]: value})
             // 清空数据
             this[key] = ''
-            // 这个userData 不可被修改 只能在父组件被修改
-            this.userData= this.users
+            // 这个userData 不可被修改 只能在父组件被修改 因此调用父组件的
+            this.$parent.setUserData(this.users)
             $Message.success('修改成功')
         }
     },
