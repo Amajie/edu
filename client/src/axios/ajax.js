@@ -8,7 +8,7 @@ import {Modal} from 'view-design'
 
 
 const instance = axios.create({
-    baseURL: '/'
+    baseURL: '/api'
 })
 
 // 取消请求

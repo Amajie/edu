@@ -178,8 +178,9 @@ router.post('/up_avatar_pic', (req, res) =>{
         let [userId] = fields.userId
         
         // 根据 \ 转换为数组 截取最后一个数据即可
-        avatarPic = `${avatarUrl}/${avatarPic.path.split('\\').pop()}`
-
+        
+        avatarPic = `/api/${avatarUrl}/${avatarPic.path.split('\\').pop()}`
+        
 
         const insert = `update users set userAvatar='${avatarPic}' where userId='${userId}'`
 
@@ -228,7 +229,6 @@ router.post('/upload_video_cut', (req, res) =>{
 })
 
 // 删除视频
-
 router.post('/de_video_cut', (req, res) =>{
 
     const {filename, userId, cut} = req.body
@@ -297,7 +297,7 @@ router.post('/set_list', (req, res) =>{
         
         // C:\vsCode\edu\server\upVideo\soqhusclecw0000000\poster\xtMn528Vd4adhhzK4UblUK92.jpg
         // 根据 \ 转换为数组 截取最后一个数据即可
-        listPoster = `${posterUrl}/${listPoster.path.split('\\').pop()}`
+        listPoster = `/api/${posterUrl}/${listPoster.path.split('\\').pop()}`
 
         const insert = `insert into lists(listId, listTitle, listType, listDirection, listUserId, listPoster, listGrade, listTime) 
                         values('${listId}', '${listTitle}', '${listType}', '${listDirection}', '${listUserId}', '${listPoster}', '${listGrade}', '${Date.now()}')`
@@ -489,9 +489,9 @@ router.post('/up_blog_pic', (req, res) =>{
         
         // C:\vsCode\edu\server\upVideo\soqhusclecw0000000\poster\xtMn528Vd4adhhzK4UblUK92.jpg
         // 根据 \ 转换为数组 截取最后一个数据即可
-        blogPic = `${posterUrl}/${blogPic.path.split('\\').pop()}`
+        blogPic = `/api/${posterUrl}/${blogPic.path.split('\\').pop()}`
 
-        res.json({"msg": "创建成功", "code":200, realName:'http://127.0.0.1:6060', blogPicUrl: blogPic})
+        res.json({"msg": "创建成功", "code":200, realName:'http://127.0.0.1:7071', blogPicUrl: blogPic})
 
     })        
 })

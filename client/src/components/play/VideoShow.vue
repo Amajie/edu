@@ -181,10 +181,8 @@ export default {
                 this.currentVideo = currentVideo
             }
 
-            console.log(this.currentVideo)
-
-
-            this.videoUrl = `/${currentVideo.userId}/merge/${currentVideo.videoUrl}`
+            // 需要加一个api
+            this.videoUrl = `/api/${currentVideo.userId}/merge/${currentVideo.videoUrl}`
         }
         
         

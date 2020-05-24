@@ -162,6 +162,7 @@ export default {
             key === 'userCode' || setUsers({...users, [key]: value})
             // 清空数据
             this[key] = ''
+            // 这个userData 不可被修改 只能在父组件被修改
             this.userData= this.users
             $Message.success('修改成功')
         }

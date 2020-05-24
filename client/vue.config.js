@@ -8,15 +8,13 @@ module.exports = {
         },
         devServer: {
             proxy: {
-                "/": {
-                    target: "http://localhost:6060/",
+                "/api": {
+                    target: "http://localhost:7071/",
                     pathRewrite: {
                         "^/api" : ""
                     }
                 }
             }
         }
-        
-        
     }
 }
