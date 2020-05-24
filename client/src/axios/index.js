@@ -18,10 +18,14 @@ export const setList = data => ajax({url: '/set_list', data, method: 'post', aut
 export const upList = data => ajax({url: '/up_list', data, method: 'post', auth: true})
 // 提交视频数据
 export const insertVideo = data => ajax({url: '/insert_video', data, method: 'post', auth: true})
+// 删除上传的视频
+export const deVideoCut = data => ajax({url: '/de_video_cut', data, method: 'post', auth: true})
 // 获取 首页数据
 export const getHome = params => ajax({url: '/get_home', params})
 // 获取 视频详情数据
 export const getVdetail = params => ajax({url: '/get_vdetail', params})
+// 获取 视频评论
+export const getListCommit = params => ajax({url: '/get_list_commit', params})
 // 获取视频数据
 export const getCourse = params => ajax({url: '/get_course', params})
 // 搜索视频数据

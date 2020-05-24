@@ -71,6 +71,7 @@
                     </div>
                     <div class="show">
                         <components
+                            ref="personChild"
                             v-if="showChild" 
                             :userData="userData"
                             :userId="users.userId" 
@@ -177,7 +178,7 @@ export default {
         // 关注
         handleFans(){
 
-            const {targetUserId, users, $Message, userData} = this
+            const {targetUserId, users, $Message, userData, $refs} = this
 
             // 为true 无需发送请求
             updateUser({
@@ -190,13 +191,16 @@ export default {
                 // 成功
                 $Message.success(`成功关注${userData.userName}`)
 
+                // 此时当前用户多一个粉丝
                 this.userData.userFans = `${userData.userFans + users.userId}|`
 
                 // 此时还要判断 是否 粉丝关注页面，如果在的话，需要把粉丝的数据push到粉丝列表中
-                // 或者重新获取粉丝关注数据
+                // 或者重新获取粉丝关注数据 这里 直接push
+                $refs.personChild.addFans && $refs.personChild.addFans(userData)
 
             })
         },
+        // 不是本人不能点击上传头像
         selectPic(e){
             if(this.targetUserId != this.users.userId){
                e.preventDefault()

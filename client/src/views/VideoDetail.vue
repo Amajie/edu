@@ -20,9 +20,9 @@
                         </div>
                         <div class="video-btn">
                             <span @click="toPlay(0)" class="study">开始学习</span>
-                            <span class="download">课件下载</span>
+                            <!-- <span class="download">课件下载</span> -->
                             <span @click="listCollect" class="collect">{{collectFlag ? '已收藏' :'收藏视频'}}</span>
-                            <span class="tel">联系老师</span>
+                            <!-- <span class="tel">联系老师</span> -->
                         </div>
                     </div>
                 </div>
@@ -48,7 +48,7 @@
                             </div>
                         </div>
                         <!-- 评论信息 -->
-                        <div class="commit">
+                        <div v-if="commitData.length" class="commit">
                             <ul>
                                 <li
                                     v-for="commit in commitData"
@@ -90,8 +90,11 @@
                                 </li>
                                
                             </ul>
-                            <div v-if="commitData.length >= 3" class="more-commit">
-                                <span>查看更多...</span>
+                            <div class="more-commit">
+                                <!-- 分页 -->
+                                <div v-if="commitTotal" class="blog-pagination">
+                                    <Page @on-change="getListCommit" :current="1" :total="commitTotal*10" simple />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -122,7 +125,7 @@
 import Navbar from '@/components/com/Navbar.vue'
 import Footerbar from '@/components/com/Footerbar.vue'
 
-import {getVdetail, upList} from '@/axios/index.js'
+import {getVdetail, upList, getListCommit} from '@/axios/index.js'
 import {mapState} from 'vuex'
 export default {
     name: 'vdetail',
@@ -130,21 +133,17 @@ export default {
         return {
             listData: {},
             commitData: [],
-            videoData: []
+            videoData: [],
+            commitTotal: 1,
+            offset: 5
         }
     },
     created(){
+        // 获课程id
         this.listId = this.$route.params.listId
         // 发送请求
-        getVdetail({listId: this.listId, commit: true}).then(res =>{
-            const {code, detailData} = res.data
-            // 获取失败 应该跳转 404
-            if(code === 500) return console.log('获取失败')
-
-            this.listData = detailData[0][0]
-            this.videoData = detailData[1]
-            this.commitData = detailData[2]
-        })
+        this.getVideo()
+        this.getListCommit(1)
     },
     computed:{
         ...mapState(['users']),
@@ -176,6 +175,35 @@ export default {
                 this.$Message.success('收藏成功')
                 // 设置数据
                 listData.listCollect = `${listData.listCollect + users.userId}|`
+            })
+        },
+
+        // 获取视频数据
+        getVideo(){
+             // 发送请求
+            getVdetail({listId: this.listId, commit: true}).then(res =>{
+                const {code, detailData} = res.data
+                // 获取失败 应该跳转 404
+                if(code === 500) return console.log('获取失败')
+
+                this.listData = detailData[0][0]
+                this.videoData = detailData[1]
+            })
+        },
+
+        getListCommit(limit){
+
+            // 发送请求
+            // 默认获取5条数据 也可以传入 offset设置获取条数
+            getListCommit({listId: this.listId, limit: limit-1}).then(res =>{
+                const {code, commitData, commitTotal} = res.data
+                // 获取失败 应该跳转 404
+                if(code === 500) return console.log('获取失败')
+
+                
+                this.commitData = commitData
+                // 这里只获取 5 条评论
+                this.commitTotal = Math.ceil(commitTotal / this.offset)
             })
         }
     },

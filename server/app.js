@@ -1,6 +1,5 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const session = require('express-session')
 
 const app = express()
 
@@ -11,12 +10,6 @@ app.use(bodyParser.json({"limit": "20000kb"}))
 
 app.use(express.static('che'))
 
-app.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, maxAge: 1000*90*4}
-}))
 
 app.use(express.static('upVideo'))
 

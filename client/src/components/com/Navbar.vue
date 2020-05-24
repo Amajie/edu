@@ -109,9 +109,10 @@ export default {
         }
         // logo
         .logo{
-            width: 170px;
+            width: 100px;
             height: 100%;
             background: url('./imgs/logo.png') no-repeat;
+            background-size: 45%;
             background-position: 100%;
         }
         // 导航栏

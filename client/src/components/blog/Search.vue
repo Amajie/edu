@@ -130,6 +130,7 @@ export default {
             }
         }
         .blog-pagination{
+            text-align: center;
             margin-top: 20px;
         }
     }

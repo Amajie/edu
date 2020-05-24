@@ -16,7 +16,7 @@
                 </div>
                 <div v-else class="progress">
                     <p>
-                        <span>{{uplodaVideoText}}</span>
+                        <span @click="delectVideo">{{uplodaVideoText}}</span>
                     </p>
                     <div>
                         <p>
@@ -158,7 +158,7 @@
 <script>
 
 
-import {setList, getCourse, insertVideo} from '@/axios/index'
+import {setList, getCourse, insertVideo, deVideoCut} from '@/axios/index'
 import axios from 'axios'
 import {mapState} from 'vuex'
 
@@ -186,7 +186,7 @@ export default {
             cutList: [],
             currentLoad: 0, // 当前下载的量
             fileSize: 0, // 视频的大小
-            uplodaVideoText: '取消上传',
+            uplodaVideoText: '上传中...', //删除视频
             typeArr:[
                 {
                     title: '前端开发',
@@ -205,7 +205,7 @@ export default {
         }
     },
     created(){
-        console.log(this.users)
+        // 获取视频集合列表
         getCourse({
             userId: this.users.userId
         }).then(res =>{
@@ -216,6 +216,7 @@ export default {
         ...mapState([
             'users'
         ]),
+        // 上传进度条
          progressWidth(){
             
             // 如果为 0 表示没上传文件 返回 0 即可
@@ -300,7 +301,7 @@ export default {
             formData.append('chunk', videoData.chunk)
             formData.append('filename', videoData.filename)
             formData.append('index', videoData.index)
-
+            //发送切片
             axios({
                 url: '/api/upload_video_cut',
                 method: 'post',
@@ -318,16 +319,40 @@ export default {
                     videoData.lastLoaded = progress.loaded
                 }
             }).then(res =>{
+                
                 const {code, index} = res.data
-                console.log(res.data)
-                return
 
                 if(code === 200){
                     this.cutList[index] && this.sendVideoCut(this.cutList[index])
+                // 这里简单的做一下上传失败提示
                 }else{
-                    // 说明 失败了 发送请求 删除切片
-
+                    console.log(1111)
+                    this.fileSize = 0
+                    this.filename = ''
+                    this.$Message.error('删除成功')
                 }                        
+            })
+        },
+
+        // 删除视频
+        delectVideo(){
+            const {$Modal, $Message, users, filename} = this
+            // 再次询问
+            $Modal.confirm({
+                title: '删除视频',
+                content: '亲，一旦删除不可找回，是否继续操作？',
+                cancelText: '取消',
+                okText: '确认',
+                onOk: () =>{
+                    deVideoCut({
+                        filename: filename,
+                        userId: users.userId
+                    }).then(res =>{
+                        this.fileSize = 0
+                        this.filename = ''
+                        $Message.success('删除成功')
+                    })
+                }
             })
         },
 

@@ -5,7 +5,7 @@
             <header>
                 <div class="header-wrap">
                     <div class="logo">
-                        <img src="./imgs/concern.png" />
+                        <img src="../components/com/imgs/logo.png" />
                     </div>
                     <div class="logo-text">
                         <span>车神教育</span>

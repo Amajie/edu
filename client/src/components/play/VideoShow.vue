@@ -3,7 +3,7 @@
         <!-- 课程信息 -->
         <div class="back-list">
             <p @click="$router.replace(`/vdetail/${$route.params.listId}`)">
-                <i class="icon iconfont">&#xeb99;</i>
+                <i class="icon iconfont">&#xe697;</i>
                 <span>返回课程详情</span>
             </p>
         </div>

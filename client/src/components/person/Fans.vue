@@ -19,6 +19,7 @@
                             </div>
                     </li>
                </ul>
+               <NoData v-if="!concerData.length" />
             </div>
             <div class="info">
                 <h2>粉丝</h2>
@@ -38,12 +39,15 @@
                         </div>
                     </li>
                </ul>
+               <NoData v-if="!fansData.length" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
+
+import NoData  from '@/components/com/NoData.vue'
 
 import {getFans} from '@/axios/index'
 
@@ -67,7 +71,7 @@ export default {
             userFans = userFans.substr(0, userFans.length - 1).substr(1, userFans.length - 1)
         }
 
-
+        // 发送请求
         getFans({
             targetUserId,
             userFans
@@ -80,6 +84,14 @@ export default {
             }
         })
     },
+
+    methods:{
+        // 当在粉丝页面关注的华，会立马显示粉丝数据
+        addFans({userAvatar, userId, userName, userSign}){
+            this.fansData.unshift({userAvatar, userId, userName, userSign})
+        }
+    },
+
     props:{
         userData: {
             type: Object,
@@ -89,6 +101,9 @@ export default {
             type: String,
             default: ''
         }
+    },
+    components:{
+        NoData
     }
 }
 </script>
@@ -107,6 +122,7 @@ export default {
                         padding: 5px;
                         height: 90px;
                         border-radius: 10px;
+                        margin-bottom: 5px;
                         border: 1px dashed #e0e0e0;
                         &:hover{
                             border: 1px dashed #787d82;

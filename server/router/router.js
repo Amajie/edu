@@ -28,9 +28,6 @@ router.post('/login', (req, res) =>{
         // 判断 用户密码是否正确
         if(data.userCode != md5(userCode) ) return res.json({"msg": "密码错误", "code": 1})
 
-        // 设置 session
-        req.session.userId = data.userId
-
         // 登陆成功
         res.json({"msg": "登陆成功", "code": 200, users: {...data, userCode: null}})
     })
@@ -52,8 +49,6 @@ router.post('/register', (req, res) =>{
 
         // 此时 创建
         mkdirsSync(userId)
-        // 设置 session
-        req.session.userId = data[1][0].userId
         // 数据格式 [ OkPacket {}, [ RowDataPacket {} ]
         res.json({"msg": "登陆成功", "code": 200, users: {...data[1][0], userCode: null}})
     })
@@ -104,7 +99,14 @@ router.get('/get_fans', (req, res) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500})
 
-        res.json({"msg": "获取成功", "code":200, concerData: data[0], fansData: data[1]})
+        console.log(typeof data[0])
+        console.log(data[0] instanceof Array)
+
+        res.json({
+            "msg": "获取成功", "code":200, 
+            concerData: data[0], 
+            fansData: userFans? data[1]: []
+        })
     })
 })
 
@@ -223,6 +225,26 @@ router.post('/upload_video_cut', (req, res) =>{
         res.json({"msg": "切片上传成功", "code": 200, index: Number(index) + 1})
 
     })        
+})
+
+// 删除视频
+
+router.post('/de_video_cut', (req, res) =>{
+
+    const {filename, userId, cut} = req.body
+
+
+    // 获取 视频文件夹 路径
+    const writeDir = path.resolve(__dirname, `../upVideo/${userId}/merge/${filename}`)
+
+    // 删除视频
+    fs.exists(writeDir, () =>{
+        fs.unlinkSync(writeDir)
+    })
+
+    // 成功
+    res.json({"msg": "删除成功", "code": 200})
+    
 })
 
 
@@ -368,15 +390,8 @@ router.get('/get_vdetail', (req, res) =>{
 
     let sqlArr = [getSql(listDetail, ''), getSql(videoDetail, '')]
 
-    if(commit){
-        // 评论 前三条数据即可 修改视频点击量
-        let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
-                    commitTime, commitUserId, commitVideo, userId, userName, userAvatar from listCommits left 
-                    join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit 3;`
-       
-        sqlArr = [...sqlArr, getSql(commitDetail, '')]
-    }else{
-         // 修改点击量
+    // 修改点击量
+    if(!commit){
         let listClick = `update lists set listClick=listClick+1 WHERE listId='${listId}';`
 
         sqlArr = [...sqlArr, getSql(listClick, '')]
@@ -386,9 +401,30 @@ router.get('/get_vdetail', (req, res) =>{
     execTrans(sqlArr, (err, detailData) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, detailData: []})
+
         res.json({"msg": "获取成功", "code":200, detailData})
     })
 
+})
+
+router.get('/get_list_commit', (req, res) =>{
+
+    const {listId, limit=0, offset=5} = req.query
+
+    // 评论 前三条数据即可 修改视频点击量
+    let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
+    commitTime, commitUserId, commitVideo, userId, userName, userAvatar from listCommits left 
+    join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit ${limit*offset}, ${offset};`
+
+    let commitTotal = `select count(commitListId) from listCommits where commitListId='${listId}';`
+
+
+    execTrans([getSql(commitDetail, ''), getSql(commitTotal, '')], (err, detailData) =>{
+
+        if(err) return res.json({"msg": "获取失败", "code": 500, detailData: []})
+
+        res.json({"msg": "获取成功", "code":200, commitData: detailData[0], commitTotal: detailData[1][0]['count(commitListId)']})
+    })
 })
 
 // 更新视频 集合

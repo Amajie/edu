@@ -34,12 +34,12 @@
                                     <Icon type="ios-arrow-down"></Icon>
                                 </Button>
                                 <DropdownMenu v-show="!activeIndex" slot="list">
-                                    <DropdownItem>视频详情</DropdownItem>
+                                    <DropdownItem @click.native="$router.push(`/vdetail/${item.listId}`)">视频详情</DropdownItem>
                                     <DropdownItem v-if="isUser" >删除视频</DropdownItem>
                                     <DropdownItem v-if="isUser" @click.native="showModal(item, index)">{{item.listRelease === 0? '我要发布': '编辑简介'}}</DropdownItem>
                                 </DropdownMenu>
                                 <DropdownMenu v-show="activeIndex === 1" slot="list">
-                                    <DropdownItem>视频详情</DropdownItem>
+                                    <DropdownItem @click.native="$router.push(`/vdetail/${item.listId}`)">视频详情</DropdownItem>
                                     <DropdownItem v-if="isUser" @click.native="reCollect(item.listId, index)">取消收藏</DropdownItem>
                                 </DropdownMenu>
                             </Dropdown>
@@ -53,7 +53,7 @@
                 </ul>
             </div>
             <div v-if="courseTotal" class="page">
-                <Page @on-change="handlePage" :current="limit" :total="courseTotal*10" simple />
+                <Page @on-change="handlePage" :current="1" :total="courseTotal*10" simple />
             </div>
         </div>
         <NoData v-else />
@@ -151,9 +151,10 @@ export default {
 
                 if(code === 500) return $Message.success('发布成功')
 
+                // 清空简介
                 this.listDesc = ''
-                this.courseData.splice(listIndex, 1)
-                this.courseTotal = courseTotal - 1
+                // 处理数据
+                this.courseData[listIndex] = {...courseData[listIndex], listDesc, listRelease: 1}
 
                 // 关闭简介框
                 this.descModal = false

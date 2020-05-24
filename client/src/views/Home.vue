@@ -2,7 +2,7 @@
     <div class="home">
         <Navbar></Navbar>
         <div class="home-main">
-            <Carousel></Carousel>
+            <!-- <Carousel></Carousel> -->
             <Course v-if="courseData.length" :courseData="courseData"></Course>
             <Technology v-if="recoArticle.length" :recoArticle="recoArticle" :newArticle="newArticle"></Technology>
             <Videos v-if="videoData.length" :videoData="videoData"></Videos>
