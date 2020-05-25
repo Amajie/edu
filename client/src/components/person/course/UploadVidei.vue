@@ -181,8 +181,8 @@ export default {
             titleLoading: false,
             courseData: [],
             // 每个切片的长度
-            cutSize:  1000000*200, // 200m 一个切片
-            cutNum: 5, // 最多切片的个数
+            cutSize:  1024*1000*100, // 100m 一个切片
+            maxSize:  1024*1000*100*5, //视频最大值 500m
             cutList: [],
             currentLoad: 0, // 当前下载的量
             fileSize: 0, // 视频的大小
@@ -233,8 +233,13 @@ export default {
         // 获取视频
         getVideo(ev){
 
+            // 获取切片的大小 和个数
+            let {cutSize, $cookies, maxSize, $Modal, $Message} = this
+
+            const file = ev.target.files[0]
+
             // 没有登陆
-            if(!this.$cookies.get('users')){
+            if(!$cookies.get('users')){
                 return this.$Modal.confirm({
                     title: '没有权限',
                     content: '亲，请先登陆，才能继续操作',
@@ -249,24 +254,30 @@ export default {
                 })
             }
 
-            let {cutSize, cutNum} = this
+            if(file.size > maxSize){
+                return $Message.error({
+                    content: `文件过大，不能超过${maxSize/1024/1000}M`,
+                    duration: 5
+                })
+            }
 
-            const file = ev.target.files[0]
+
             // 设置大小
             this.fileSize = file.size
             // 先清除数据
             this.cutList = []
 
-            // 先判断 切片 个数是否大于 cutNum
-            // 判断file.size  cutSize*cutNum 的大小即可
-            if(file.size <= cutSize*cutNum){
+            let cutNum = 1
+
+
+            // 判断file.size 大于  cutSize 就要切片 
+            if(file.size > cutSize){
                 // 切片个数
                 cutNum = Math.ceil(file.size/cutSize)
-            // 否则切片个数为 cutNum 求 cutSize
+            // 否则 就切片大小就等于file.size 即可
             }else{
-                cutSize = file.size/cutNum
+                cutSize = file.size
             }
-
 
             let index = 0
             // 切片起点
@@ -287,9 +298,7 @@ export default {
                 index++
             }
 
-
             this.sendVideoCut(this.cutList[0])
-
         },
 
 
@@ -326,7 +335,6 @@ export default {
                     this.cutList[index] && this.sendVideoCut(this.cutList[index])
                 // 这里简单的做一下上传失败提示
                 }else{
-                    console.log(1111)
                     this.fileSize = 0
                     this.filename = ''
                     this.$Message.error('删除成功')

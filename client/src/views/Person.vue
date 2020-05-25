@@ -5,7 +5,7 @@
             <!-- 主页 -->
             <div class="person-info">
                 <div class="info">
-                    <div class="user-pic">
+                    <div v-show="userData.userAvatar" class="user-pic">
                         <div class="avatar">
                             <div class="up">
                                 <Upload 
