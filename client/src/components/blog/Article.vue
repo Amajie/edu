@@ -83,7 +83,8 @@ export default {
             // 否则发送请求
             upWrite({
                 readerId,
-                articleId
+                articleId,
+                userId: users.userId
             }).then(res =>{
                 // 失败
                 if(res.data.code === 500) 

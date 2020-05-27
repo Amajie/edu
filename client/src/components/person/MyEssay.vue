@@ -93,7 +93,7 @@ export default {
             ],
             total: 1,
             limit: 1,
-            offset: 1
+            offset: 6
         }
     },
     created(){

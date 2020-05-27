@@ -9,7 +9,7 @@ const multiparty = require('multiparty')
 const {execTrans, getSql} = require('../mysql/connect.js')
 
 // 默认头像
-const initAvatar = '/avatar/init_avatar.png'
+const initAvatar = '/api/avatar/init_avatar.png'
 
 // 登陆 
 router.post('/login', (req, res) =>{
@@ -55,13 +55,6 @@ router.post('/register', (req, res) =>{
 
 })
 
-
-router.get('/hj', (req, res) =>{
-    mkdirsSync('hj')
-    // hjjj
-    res.send('sadas')
-})
-
 // 获取用户的个人信息
 router.get('/get_user', (req, res) =>{
     const {userId} = req.query
@@ -98,9 +91,6 @@ router.get('/get_fans', (req, res) =>{
     execTrans(sqlArr, (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500})
-
-        console.log(typeof data[0])
-        console.log(data[0] instanceof Array)
 
         res.json({
             "msg": "获取成功", "code":200, 
@@ -260,7 +250,6 @@ router.post('/insert_video', (req, res) =>{
     // 添加视频
     const insert2 = `insert into videos(videoId, videoListId, videoTitle, videoDesc, videoUrl) values('${videoId}', '${listId}', '${videoTitle}', '${videoDesc}', '${filename}')`
 
-    console.log([getSql(insert1, ''), getSql(insert2, '')])
     execTrans([getSql(insert1, ''), getSql(insert2, '')], err =>{
 
         if(err) return res.json({"msg": "操作失败", "code": 500, title: {}})
@@ -343,7 +332,7 @@ router.get('/get_home', (req, res) =>{
 
 
     // 获取最新的数据
-    let newList = `select ${videoData} from lists where listRelease=1 ORDER BY listTime DESC limit 0, 3`
+    let newList = `select ${videoData} from lists where listRelease=1 ORDER BY listTime DESC limit 0, 10`
     // 推荐文章
     let recoArticle= `select articleId, articleTitle, articleTime, userId from articles 
                     left join users on articles.articleUserId = users.userId ORDER BY articleReader DESC limit 5`
@@ -413,10 +402,10 @@ router.get('/get_list_commit', (req, res) =>{
 
     // 评论 前三条数据即可 修改视频点击量
     let commitDetail = `select commitContent, commitRate, commitId, commitListId, 
-    commitTime, commitUserId, commitVideo, userId, userName, userAvatar from listCommits left 
-    join users on listCommits.commitUserId = users.userId where commitListId='${listId}' limit ${limit*offset}, ${offset};`
+    commitTime, commitUserId, commitVideo, userId, userName, userAvatar from listcommits left 
+    join users on listcommits.commitUserId = users.userId where commitListId='${listId}' limit ${limit*offset}, ${offset};`
 
-    let commitTotal = `select count(commitListId) from listCommits where commitListId='${listId}';`
+    let commitTotal = `select count(commitListId) from listcommits where commitListId='${listId}';`
 
 
     execTrans([getSql(commitDetail, ''), getSql(commitTotal, '')], (err, detailData) =>{
@@ -461,8 +450,7 @@ router.get('/search_video', (req, res) =>{
     const { listType, listGrade, listTitle, listHeat } = req.query
 
     execTrans(searchVideo(req.query), (err, data) =>{
-        console.log(data)
-        console.log(searchVideo(req.query))
+        
         if(err || !data[0].length) return res.json({"msg": "获取失败", "code": 500, searchData: [], searchTotal: 0})
         
         res.json({"msg": "获取成功", "code":200, searchData: data[0], searchTotal: data[1][0]['count(listId)']})
@@ -499,13 +487,15 @@ router.post('/up_blog_pic', (req, res) =>{
 // 写文章
 router.post('/write', (req, res) =>{
 
-    const {articleId, articleTitle, articleContent, articleDraft, userId} = req.body
+    let {articleId, articleTitle, articleContent, articleDraft, userId} = req.body
+
+    articleContent = writeReplace(articleContent, true)
 
     let insert = ''
     // 编辑文章
     if(articleId){
-        insert = `update articles set articleTitle='${articleTitle}', articleContent='${articleContent}, 
-                    articleDraft='${articleDraft} where articleId='${articleId}'`
+        insert = `update articles set articleTitle='${articleTitle}', articleContent='${articleContent}', 
+                    articleDraft=${articleDraft} where articleId='${articleId}'`
     // 写文章
     }else{
         insert = `insert into articles(articleId, articleUserId, articleTitle, articleContent, articleDraft, articleTime) 
@@ -567,6 +557,9 @@ router.get('/get_write', (req, res) =>{
 
         const commitData = handleCommit(data)
 
+        // 转义回来
+        articleData.articleContent = writeReplace(articleData.articleContent)
+
         res.json({"msg": "获取成功", "code":200, articleData, userData, commitData, recoArticle})
     })
 
@@ -582,15 +575,12 @@ router.get('/get_write', (req, res) =>{
  */
 router.post('/up_write', (req, res) =>{
 
-    const {articleId, articleContent, articleTitle, readerId} = req.body
+    const {articleId, userId, articleContent, articleTitle, readerId} = req.body
 
     let str = ''
-    let userId = 'soqhusclecw0000000'
 
     switch(readerId){
-        // case 1:
-        //     str = 'articleCommit = articleCommit+1'
-        //     break
+
         case 1:
             str = `likeList = CONCAT(likeList, '${userId}|')`
             break
@@ -604,8 +594,6 @@ router.post('/up_write', (req, res) =>{
         default:
             str = `articleContent = ${articleContent}, articleTitle = ${articleTitle}`
     }
-
-
 
     const insert = `UPDATE articles SET ${str} WHERE articleId='${articleId}'`
 
@@ -668,6 +656,13 @@ router.get('/get_my_write', (req, res) =>{
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
+
+        // 这里先转义回来
+        data[0].forEach(item =>{
+            item.articleContent = writeReplace(item.articleContent)
+        })
+
+
         res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
 
     })
@@ -707,6 +702,7 @@ router.get('/get_collect_write', (req, res) =>{
     execTrans([getSql(insert1, ''), getSql(insert2, '')], (err, data) =>{
 
         if(err) return res.json({"msg": "获取失败", "code": 500, writeData: [], writeTotal: 0})
+        
         res.json({"msg": "获取成功", "code": 200, writeData: data[0], writeTotal: data[1][0]['count(articleId)']})
 
     })
@@ -908,7 +904,7 @@ function getUpdateSql(body){
             insert1 = `update lists set listDesc='${listDesc}', listRelease=${updateId} where listId='${listId}'`
             break
     }
-    console.log(insert1)
+
     return [getSql(insert1, '')]
 }
 
@@ -952,8 +948,19 @@ function handleCommit(data){
             }
         })
     })
-    console.log(commitData)
     return commitData
+}
+
+// 处理文章内容双引号和单引号的转换
+function writeReplace(articleContent, flag){
+    // flag--true 双引号转为 $a; 单引号转为 $p;
+    // flag--false 反转
+
+    if(!articleContent) return ''
+
+    return flag? articleContent.replace(/\'/g, '&p;').replace(/\"/g, '&a;'):
+                articleContent.replace(/&p;/g, '\'').replace(/&a;/g, '\"')
+
 }
 
 // 同步创建文件夹

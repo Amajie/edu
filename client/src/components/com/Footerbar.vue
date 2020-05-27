@@ -1,6 +1,6 @@
 <template>
     <div class="footerbar">
-        Copyright 2014-2020 https://www.php.cn/ All Rights Reserved | 皖B2-20150071-9  皖公网安备 34010402701654号
+        Copyright 2014-2020 车神教育 All Rights Reserved
     </div>
 </template>
 <script>

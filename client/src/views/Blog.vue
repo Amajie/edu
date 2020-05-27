@@ -20,7 +20,7 @@
                         <div class="title">
                             <span>热门博文</span>
                         </div>
-                        <ul>
+                        <ul v-if="recoArticle.length">
                             <li
                                 v-for="item in recoArticle"
                                 :key="item.articleId"
@@ -30,6 +30,7 @@
                                 <span>{{item.articleTitle}}</span>
                             </li>
                         </ul>
+                        <NoData v-else></NoData>
                     </div>
                 </div>
             </div>
@@ -71,6 +72,7 @@
 
 import Navbar from '@/components/com/Navbar.vue'
 import Footerbar from '@/components/com/Footerbar.vue'
+import NoData from '@/components/com/NoData.vue'
 import Article from '@/components/blog/Article.vue'
 import Search from '@/components/blog/Search.vue'
 
@@ -183,6 +185,7 @@ export default {
     components:{
         Navbar,
         Footerbar,
+        NoData,
         Article,
         Search
     }
