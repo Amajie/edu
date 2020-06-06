@@ -22,13 +22,13 @@
                         <span>作者 ({{item.userName }})</span>
                         <span>阅读 ({{item.articleReader}})</span>
                         <span>评论 ({{item.articleCommit}})</span>
-                        <a class="artile-edit">编辑</a>
+                        <!-- <a class="artile-edit">编辑</a> -->
                     </div>
                 </div>
             </div>
             <!-- 分页 -->
             <div class="blog-pagination">
-                <Page :current="1" :total="searchTotal*10" simple />
+                <Page :current="1" @on-change="pageChange" :total="searchTotal*10" simple />
             </div>
         </div>
         <NoData v-else></NoData>
@@ -49,6 +49,9 @@ export default {
         // 跳转到阅读列表
         handleClick({userId, articleId}){
             this.$emit('handleNav', {userId, articleId})
+        },
+        pageChange(limit){
+            this.$emit('handlePage', limit)
         }
     },
     props:{
@@ -60,7 +63,8 @@ export default {
             type: Number,
             default: 0
         },
-        handleNav: Function
+        handleNav: Function,
+        handlePage: Function
     },
 
     components:{

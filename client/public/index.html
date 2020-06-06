@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title>client</title>
+    <title>车神教育网</title>
   </head>
   <body>
     <noscript>
@@ -14,4 +14,20 @@
     <div id="app"></div>
     <!-- built files will be auto injected -->
   </body>
+  <script>
+    (function () {
+			/*
+				viewport适配的优缺点
+				优点：所量即所得
+				缺点：破坏了完美视口
+			 */
+			//即将布局视口转为设计图的宽度
+			//设计图的宽度
+			var targetW = 1200
+			//因为是将布局视口放大,因此scale是小于0的
+			var scale = document.documentElement.clientWidth/targetW
+			var metaNode = document.querySelector('meta[name = "viewport"]')
+			metaNode.content="width = device-width initial-scale="+scale+",minimum-scale="+scale+",maximum-scale="+scale+",user-scalable=no";
+		})()
+  </script>
 </html>

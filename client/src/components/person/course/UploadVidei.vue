@@ -254,6 +254,7 @@ export default {
                 })
             }
 
+            // 文件过大
             if(file.size > maxSize){
                 return $Message.error({
                     content: `文件过大，不能超过${maxSize/1024/1000}M`,
@@ -324,7 +325,7 @@ export default {
                     
                     this.currentLoad += cutLoaded
 
-                    // // 保存当前 上传大小
+                    // 保存当前 上传大小
                     videoData.lastLoaded = progress.loaded
                 }
             }).then(res =>{

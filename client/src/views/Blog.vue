@@ -61,6 +61,7 @@
                         :searchData="searchData" 
                         :searchTotal="searchTotal"
                         @handleNav="handleNav"
+                        @handlePage="handlePage"
                     ></Search>
                 </div>
             </div>
@@ -92,7 +93,9 @@ export default {
             searchTotal: 0,
             articleId: '',
             articleTitle: '',
-            articleFalg: false
+            articleFalg: false,
+            limit: 1,
+            offset: 6
         }
     },
     created(){
@@ -141,6 +144,7 @@ export default {
                     this.commitData = commitData
                     this.articleFalg = true
                 }
+
                 this.recoArticle = recoArticle
 
             })
@@ -159,13 +163,15 @@ export default {
         // 搜索
         initSearch(){
             
-            const {articleTitle, $Message} = this
+            const {articleTitle, $Message, limit, offset} = this
 
             if(!articleTitle) return $Message.info('请输入关键字')
 
             // 发送搜索请求
             searchWrite({
-                articleTitle
+                articleTitle,
+                limit: limit - 1,
+                offset
             }).then(res =>{
 
                 const {searchData, searchTotal} = res.data
@@ -173,9 +179,14 @@ export default {
                 this.searchData = searchData
 
                 // token存在 才需要设置
-                searchTotal && (this.searchTotal = searchTotal)
+                searchTotal && (this.searchTotal = Math.ceil(searchTotal/offset))
 
             })
+        },
+        // 处理分页
+        handlePage(limit){
+            this.limit = limit
+            this.initSearch()
         },
         // 前往写博客
         toWrite(){

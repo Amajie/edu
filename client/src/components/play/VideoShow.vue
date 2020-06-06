@@ -125,6 +125,7 @@ export default {
             this.videoDom.play()
             this.playBtn = false
         },
+
         // 设置声音
         handleVioce(ev){
             // 设置播放进度 此时会自己调用
@@ -139,6 +140,7 @@ export default {
 
 
         },
+
         // 处理鼠标移动
         handleMove(){
             
@@ -154,6 +156,7 @@ export default {
             // 否则显示
             this.opShow = true
         },
+
         //获取时间的函数 00: 00: 00
         getTime(time){
             //计算的时间最后返回的是 00:00:00的格式

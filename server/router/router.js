@@ -557,9 +557,12 @@ router.get('/get_write', (req, res) =>{
 
         const commitData = handleCommit(data)
 
-        // 转义回来
-        articleData.articleContent = writeReplace(articleData.articleContent)
 
+        // 转义回来
+        if(articleData){
+            articleData.articleContent = writeReplace(articleData.articleContent)
+        }
+        // 成功
         res.json({"msg": "获取成功", "code":200, articleData, userData, commitData, recoArticle})
     })
 
@@ -759,7 +762,7 @@ router.post('/de_collect_write', (req, res) =>{
 // 搜索文章
 router.get('/search_write', (req, res) =>{
 
-    const {articleTitle, limit=0, offset=10} = req.query
+    const {articleTitle, limit=0, offset=6} = req.query
 
 
     let str = ''
